@@ -89,8 +89,6 @@ elif config.model == 'cnn':
 # Set double precision
 model.double()
 
-print('Start Define ReducedFunctional')
-
 k = Function(V).assign(1)
 f̂ = ReducedFunctional(solve_poisson(k, f, V, u_exact), Control(k))
 # f̂ = ReducedFunctional(residual(k, f, V, u_exact), Control(k))
