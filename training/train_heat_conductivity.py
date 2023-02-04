@@ -1,9 +1,12 @@
+import os
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
 import torch.optim as optim
 import firedrake as fd
+
+from tqdm.auto import tqdm, trange
 
 from firedrake import *
 from firedrake_adjoint import *
@@ -12,6 +15,7 @@ from dataset_processing.generate_random_conductivity import random_field
 from models.autoencoder import EncoderDecoder
 from models.cnn import CNN
 from training.utils import TrainingConfig
+from evaluation.evaluate import evaluate
 
 
 # Retrieve arguments
@@ -98,33 +102,46 @@ G = fd.torch_op(F)
 u_obs_P = fd_backend.to_ml_backend(u_obs)
 k_exact_P = fd_backend.to_ml_backend(k_exact)
 
-optimizer = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
+optimiser = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
 
 k_learned = []
 step = 10
 nepochs = config.epochs
-for epoch in range(nepochs):
 
-    optimizer.zero_grad()
+# Generate synthetic dataset
+*train_data, test_data = [fd_backend.to_ml_backend(x) for x in random_field(V, config.ntrain, seed=123)]
 
-    # Forward pass
-    k_P = model(u_obs_P)
 
-    loss_uk = G(k_P)
-    # loss_F = (F_k ** 2).sum()
+for epoch_num in trange(nepochs):
+    print(f" Epoch num: {epoch_num}")
 
-    loss_k = ((k_exact_P - k_P)**2).sum()
-    loss = loss_uk + config.alpha * loss_k
+    model.train()
 
-    # Backprop and perform Adam optimisation
-    loss.backward()
-    optimizer.step()
+    for step_num, batch in tqdm(enumerate(train_data), total=config.ntrain):
+        optimiser.zero_grad()
 
-    if epoch % (nepochs/step) == 0 or epoch == nepochs-1:
+        # Forward pass
+        k_P = model(batch)
+
+        loss_uk = G(k_P)
+        # loss_F = (F_k ** 2).sum()
+
+        loss_k = ((k_exact_P - k_P)**2).sum()
+        loss = loss_uk + config.alpha * loss_k
+
+        # Backprop and perform Adam optimisation
+        loss.backward()
+        optimiser.step()
+
+    if epoch_num % (nepochs/step) == 0 or epoch_num == nepochs-1:
         k_F = fd_backend.from_ml_backend(k_P, V)
         k_learned.append(k_F)
-        print(f" Epoch: {epoch}  Loss: {loss.item()}")
+        print(f" Epoch: {epoch_num}  Loss: {loss.item()}")
         print(f" Loss_uk: {loss_uk.item()}  Loss_k: {loss_k.item()}")
+
+    # Evaluation on the test random field
+    error = evaluate(model, V, config=config, data=test_data, metric=config.evaluation_metric)
+    print(f" Error ({config.evaluation_metric}): {error}")
 
 # Plot
 nn = 3
