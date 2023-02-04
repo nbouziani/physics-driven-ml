@@ -8,7 +8,7 @@ import firedrake as fd
 from firedrake import *
 from firedrake_adjoint import *
 
-from generate_random_conductivity import random_field
+from dataset_processing.generate_random_conductivity import random_field
 from models.autoencoder import EncoderDecoder
 from models.cnn import CNN
 from training.utils import TrainingConfig
@@ -16,23 +16,28 @@ from training.utils import TrainingConfig
 
 # Retrieve arguments
 parser = argparse.ArgumentParser()
+parser.add_argument("--resources_dir", default='', type=str, help="Resources directory")
 parser.add_argument("--model", default="encoder", type=str, help="one of [encoder, cnn]")
 parser.add_argument("--conductivity", default="circle", type=str, help="one of [circle, random]")
-parser.add_argument("--scale_noise", type=float, default=5e-3)
-parser.add_argument("--alpha", type=float, default=1e-3)
+parser.add_argument("--scale_noise", default=5e-3, type=float, help="Noise scaling")
+parser.add_argument("--alpha", default=1e-3, type=float, help="Regularisation parameter")
+parser.add_argument("--ntrain", default=100, type=int, help="Number of training samples")
 parser.add_argument("--epochs", default=100, type=int, help="Epochs")
 parser.add_argument("--learning_rate", default=1e-3, type=float, help="Learning rate")
-parser.add_argument("--resources_dir", default='', type=str, help="Resources directory")
+parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl]")
+parser.add_argument("--Lx", default=1., type=float, help="Width of the domain")
+parser.add_argument("--Ly", default=1., type=float, help="Length of the domain")
 
 args = parser.parse_args()
-config = TrainingConfig(*args._get_args())
+config = TrainingConfig(**dict(args._get_kwargs()))
+
 
 def solve_poisson(k, f, V, u_exact):
     """Solve Poisson problem"""
     u = Function(V)
     v = TestFunction(V)
     F = (inner(exp(k) * grad(u), grad(v)) - inner(f, v)) * dx
-    bcs = [DirichletBC(V, Constant(1.0), "on_boundary")]
+    bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
     # Solve PDE
     solve(F == 0, u, bcs=bcs, solver_parameters={'ksp_type': 'preonly', 'pc_type': 'lu'})
     # Assemble Firedrake L2-loss
@@ -40,27 +45,24 @@ def solve_poisson(k, f, V, u_exact):
 
 
 def residual(k, f, V, u_exact):
-    """Solve Poisson problem"""
-    u = Function(V)
+    """Assemble Poisson residual"""
     v = TestFunction(V)
-    F = (inner(k * grad(u_exact), grad(v)) - inner(f, v)) * dx
-    return assemble(F)
+    F = (inner(exp(k) * grad(u_exact), grad(v)) - inner(f, v)) * dx
+    bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
+    return assemble(F, bcs=bcs)
 
 
-mesh = UnitSquareMesh(50, 50)
+mesh = RectangleMesh(50, 50, config.Lx, config.Ly)
 V = FunctionSpace(mesh, "CG", 1)
 v = TestFunction(V)
-
 x, y = SpatialCoordinate(mesh)
 f = Function(V).interpolate(sin(pi * x) * sin(pi * y))
 
-Lx = 1.0
-Ly = 1.0
 with stop_annotating():
     if config.conductivity == "circle":
         k_exact = Function(V).interpolate(conditional((x - Lx / 2)**2 + (y - Ly / 2)**2 < 0.1, 2, 1))
     elif config.conductivity == "random":
-        k_exact = random_field(V)
+        k_exact, = random_field(V)
     u_exact = Function(V)
     F = (inner(exp(k_exact) * grad(u_exact), grad(v)) - inner(f, v)) * dx
     bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
@@ -70,15 +72,15 @@ with stop_annotating():
     noise = config.scale_noise * np.random.rand(V.dim())
     u_obs.dat.data[:] += noise
 
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-collection = tripcolor(k_exact, axes=axes[0], alpha=1)
-fig.colorbar(collection);
-collection = tripcolor(u_exact, axes=axes[1], alpha=1)
-fig.colorbar(collection);
-collection = tripcolor(u_obs, axes=axes[2], alpha=1)
-fig.colorbar(collection);
+# fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+# collection = tripcolor(k_exact, axes=axes[0], alpha=1, cmap='jet')
+# fig.colorbar(collection);
+# collection = tripcolor(u_exact, axes=axes[1], alpha=1, cmap='jet')
+# fig.colorbar(collection);
+# collection = tripcolor(u_obs, axes=axes[2], alpha=1, cmap='jet')
+# fig.colorbar(collection);
 
-plt.show()
+# plt.show()
 
 fd_backend = fd.get_backend()
 
@@ -90,9 +92,8 @@ elif config.model == 'cnn':
 model.double()
 
 k = Function(V).assign(1)
-f̂ = ReducedFunctional(solve_poisson(k, f, V, u_exact), Control(k))
-# f̂ = ReducedFunctional(residual(k, f, V, u_exact), Control(k))
-G = fd.torch_op(f̂)
+F = ReducedFunctional(solve_poisson(k, f, V, u_exact), Control(k))
+G = fd.torch_op(F)
 
 u_obs_P = fd_backend.to_ml_backend(u_obs)
 k_exact_P = fd_backend.to_ml_backend(k_exact)
@@ -138,12 +139,12 @@ def plots(nn, mm, contour=False):
 
     for i, ki in enumerate(k_learned):
         ax = axes[int(i/mm), i%mm]
-        l = p(ki, axes=ax)
+        l = p(ki, axes=ax, cmap='jet')
         plt.colorbar(l)
         ax.set_title("$k^{%s}$" % ((i + 1) * step))
 
     ax = axes[nn-1, mm-1]
-    l = p(k_exact, axes=ax)
+    l = p(k_exact, axes=ax, cmap='jet')
     plt.colorbar(l)
     ax.set_title("$k^{exact}$")
 
