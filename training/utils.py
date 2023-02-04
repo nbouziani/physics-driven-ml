@@ -11,14 +11,22 @@ class TrainingConfig:
     # Model
     model: str = "encoder"
 
+    # Domain
+    Lx: float = 1.0
+    Ly: float = 1.0
+
     # Test case
     conductivity: str = "circle"
     scale_noise: float = 5e-3
+
+    # Dataset
+    ntrain: int = 30
 
     # Optimisation
     alpha: float = 1e-3
     epochs: int = 100
     learning_rate: float = 1e-3
+    evaluation_metric: str = "L2"
 
     def __post_init__(self):
 
