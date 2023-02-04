@@ -1,10 +1,16 @@
-from torch.nn import Module, Sequential, ReLU, Tanh, MaxPool2d, Conv2d, ConvTranspose2d
+from torch.nn import Module, Sequential, Linear, ReLU, Tanh, MaxPool2d, Conv2d, ConvTranspose2d
 
 
 class CNN(Module):
-    def __init__(self):
+    def __init__(self, dim):
         super(CNN, self).__init__()
-        
+
+        self.dim = dim
+        self.n = int(self.dim ** 0.5)
+
+        self.linear_in = Linear(self.dim, self.n**2)
+        self.linear_out = Linear(self.n*(self.n - 2)+1, self.dim)
+
         self.encoder = Sequential(
                             Conv2d(1, 64, kernel_size=3,
                                       padding=1),
@@ -26,6 +32,15 @@ class CNN(Module):
                             Tanh())
 
     def forward(self, x):
-        encoded = self.encoder(x)
+        # x: [batch_size, dim]
+        n = self.n
+        # Reduce dimensionality to form a grid: x -> [batch_size, :, n, n]
+        x = self.linear_in(x)
+        cnn_input = x.reshape(-1, n, n)[:, None, :]
+        # CNN
+        encoded = self.encoder(cnn_input)
         decoded = self.decoder(encoded)
-        return decoded
+        # Recover dimensionality: [batch_size, :, n, n] -> [batch_size, dim]
+        y = decoded.squeeze().reshape(-1, n*(n - 2)+1)
+        y = self.linear_out(y)
+        return y
