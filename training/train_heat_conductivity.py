@@ -6,7 +6,6 @@ import torch
 import torch.optim as optim
 import firedrake as fd
 
-
 from tqdm.auto import tqdm, trange
 
 from firedrake import *
@@ -47,7 +46,8 @@ V = FunctionSpace(mesh, "CG", 1)
 v = TestFunction(V)
 # Define right-hand side
 x, y = SpatialCoordinate(mesh)
-f = Function(V).interpolate(sin(pi * x) * sin(pi * y))
+with stop_annotating():
+    f = Function(V).interpolate(sin(pi * x) * sin(pi * y))
 # Define Dirichlet boundary conditions
 bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
 
@@ -80,9 +80,30 @@ model.double()
 
 optimiser = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
 
-step = 10
 best_error = 0.
+
 k = Function(V)
+u_exact = Function(V)
+k_exact = Function(V)
+
+# Get working tape
+tape = get_working_tape()
+
+# Set local tape to only record the operations relevant to G on the computational graph
+set_working_tape(Tape())
+# Define PyTorch operator for solving the PDE (for computing k -> 0.5 * ||u(k) - u_exact||^{2}_{L2})
+F = ReducedFunctional(solve_poisson(k, u_exact), [Control(k), Control(u_exact)])
+G = fd.torch_op(F)
+
+# Set local tape to only record the operations relevant to H on the computational graph
+set_working_tape(Tape())
+# Define PyTorch operator for computing the L2-loss (for computing k -> 0.5 * ||k - k_exact||^{2}_{L2})
+F = ReducedFunctional(assemble_L2_error(k, k_exact), [Control(k), Control(k_exact)])
+H = fd.torch_op(F)
+
+# Re-establish the initial tape
+set_working_tape(tape)
+
 for epoch_num in trange(config.epochs):
     print(f" Epoch num: {epoch_num}")
 
@@ -92,24 +113,17 @@ for epoch_num in trange(config.epochs):
 
         model.zero_grad()
 
-        k_exact, u_exact, u_obs = batch
-
-        # Define PyTorch operator for solving the PDE (for computing k -> 0.5 * ||u(k) - u_exact||^{2}_{L2})
-        F = ReducedFunctional(solve_poisson(k, u_exact), Control(k))
-        G = fd.torch_op(F)
-
-        # Define PyTorch operator for computing the L2-loss (for computing k -> 0.5 * ||k - k_exact||^{2}_{L2})
-        F = ReducedFunctional(assemble_L2_error(k, k_exact), Control(k))
-        H = fd.torch_op(F)
+        # TODO: Add device to batch
+        # Convert to PyTorch tensors
+        k_exact, u_exact, u_obs = [fd_backend.to_ml_backend(x) for x in batch]
 
         # Forward pass
-        u_obs_P = fd_backend.to_ml_backend(u_obs)
-        k_P = model(u_obs_P)
+        k = model(u_obs)
 
         # Solve PDE for k_P and assemble the L2-loss: 0.5 * ||u(k) - u_exact||^{2}_{L2}
-        loss_uk = G(k_P)
+        loss_uk = G(k, u_exact)
         # Assemble L2-loss: 0.5 * ||k - k_exact||^{2}_{L2}
-        loss_k = H(k_P)
+        loss_k = H(k, k_exact)
 
         # Total loss
         loss = loss_uk + config.alpha * loss_k
