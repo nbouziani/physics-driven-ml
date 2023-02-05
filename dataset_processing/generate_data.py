@@ -27,13 +27,16 @@ def random_field(V, N=1, m=15, σ=1.4, tqdm=False, seed=2023):
     return fields
 
 
-def generate_data(V, data_dir, ntrain=50, forward='poisson', noise='normal', scale_noise=1., seed=1234):
+def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='normal', scale_noise=1., seed=1234):
     """Generate train/test data for
 
         forward: or a callable
     """
+    if ntest != 1:
+        raise NotImplementedError("The case ntest != 1 is not implemented and necessitates defining an appropriate evaluation metric.")
+
     print(f"\n Generate random fields")
-    ks = random_field(V, N=ntrain+1, tqdm=True, seed=seed)
+    ks = random_field(V, N=ntrain+ntest, tqdm=True, seed=seed)
 
     print(f"\n Generate corresponding PDE solutions")
 
@@ -46,7 +49,7 @@ def generate_data(V, data_dir, ntrain=50, forward='poisson', noise='normal', sca
         for k in tqdm(ks):
             u = Function(V)
             F = (inner(exp(k) * grad(u), grad(v)) - inner(f, v)) * dx
-            # Solve PDE using LU solver
+            # Solve PDE using LU factorisation
             solve(F == 0, u, bcs=bcs, solver_parameters={'ksp_type': 'preonly', 'pc_type': 'lu'})
             us.append(u)
     elif callable(forward):
@@ -79,6 +82,7 @@ def generate_data(V, data_dir, ntrain=50, forward='poisson', noise='normal', sca
 
     # Save train data
     with CheckpointFile(os.path.join(data_dir, "train_data.h5"), 'w') as afile:
+        afile.h5pyfile["ntrain"] = ntrain
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_train, us_train, us_obs_train)):
             afile.save_function(k, idx=i, name="k")
@@ -87,10 +91,11 @@ def generate_data(V, data_dir, ntrain=50, forward='poisson', noise='normal', sca
 
     # Save test data
     with CheckpointFile(os.path.join(data_dir, "test_data.h5"), 'w') as afile:
+        afile.h5pyfile["ntest"] = ntest
         afile.save_mesh(mesh)
-        afile.save_function(k_test, name="k")
-        afile.save_function(u_test, name="u")
-        afile.save_function(u_obs_test, name="u_obs")
+        afile.save_function(k_test, idx=0, name="k")
+        afile.save_function(u_test, idx=0, name="u")
+        afile.save_function(u_obs_test, idx=0, name="u_obs")
 
 
 if __name__ == "__main__":
