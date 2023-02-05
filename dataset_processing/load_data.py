@@ -4,7 +4,7 @@ from firedrake import *
 
 
 def load_dataset(config):
-    data_dir = os.path.join(config.resources_dir, "datasets", config.name_dir)
+    data_dir = os.path.join(config.resources_dir, "datasets", config.dataset)
     train_data = []
     test_data = []
     # Load training data
