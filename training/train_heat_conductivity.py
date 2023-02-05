@@ -15,8 +15,11 @@ from dataset_processing.generate_data import random_field
 from dataset_processing.load_data import load_dataset
 from models.autoencoder import EncoderDecoder
 from models.cnn import CNN
-from training.utils import TrainingConfig
+from training.utils import TrainingConfig, get_logger
 from evaluation.evaluate import evaluate
+
+
+logger = get_logger(__name__)
 
 
 # Retrieve arguments
@@ -28,14 +31,16 @@ parser.add_argument("--ntrain", default=100, type=int, help="Number of training 
 parser.add_argument("--epochs", default=50, type=int, help="Epochs")
 parser.add_argument("--learning_rate", default=1e-3, type=float, help="Learning rate")
 parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl]")
-parser.add_argument("--name_dir", default="poisson_data", type=str, help="Directory name used to access datasets and save trained models")
+parser.add_argument("--max_eval_steps", default=5000, type=int, help="Maximum number of evaluation steps")
+parser.add_argument("--dataset", default="poisson", type=str, help="Dataset name: one of [poisson]")
+parser.add_argument("--name_dir", default="data", type=str, help="Directory name to save trained models")
 
 args = parser.parse_args()
 config = TrainingConfig(**dict(args._get_kwargs()))
 
 
 # Load dataset
-dataset_dir = os.path.join(config.resources_dir, "datasets", config.name_dir)
+dataset_dir = os.path.join(config.resources_dir, "datasets", config.dataset)
 if not os.path.exists(dataset_dir):
     raise ValueError(f"Dataset directory {os.path.abspath(dataset_dir)} does not exist")
 
@@ -104,8 +109,9 @@ H = fd.torch_op(F)
 # Re-establish the initial tape
 set_working_tape(tape)
 
+# Training loop
 for epoch_num in trange(config.epochs):
-    print(f" Epoch num: {epoch_num}")
+    logger.info(f"Epoch num: {epoch_num}")
 
     model.train()
 
@@ -132,26 +138,26 @@ for epoch_num in trange(config.epochs):
         loss.backward()
         optimiser.step()
 
-    print(f" Total loss: {loss.item()}")
-    print(f"\t Loss_uk: {loss_uk.item()}  Loss_k: {loss_k.item()}")
+    logger.info(f"Total loss: {loss.item()}")\
+                  \n\t Loss_uk: {loss_uk.item()}  Loss_k: {loss_k.item()}")
 
     # Evaluation on the test random field
     error = evaluate(model, config, test_data, V)
-    print(f" Error ({config.evaluation_metric}): {error}")
+    logger.info(f"Error ({config.evaluation_metric}): {error}")
 
-    error_train = evaluate(model, config, train_data[:1], V)
-    print(f"Debug Error ({config.evaluation_metric}): {error_train}")
+    error_train = evaluate(model, config, train_data, V)
+    logger.info(f"Debug Error ({config.evaluation_metric}): {error_train}")
 
     # Save best-performing model
     if error < best_error or epoch_num == 0:
         best_error = error
         # Create directory for trained models
-        data_dir = os.path.join(config.resources_dir, "saved_models", config.name_dir)
+        data_dir = os.path.join(config.resources_dir, "saved_models", config.dataset, config.name_dir)
         model_dir = os.path.join(data_dir, f"epoch-{epoch_num}-error_{best_error:.5f}")
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         # Save model
-        print(f"Saving model checkpoint to {model_dir}")
+        logger.info(f"Saving model checkpoint to {model_dir}\n")
         model_to_save = (
                 model.module if hasattr(model, "module") else model
             )  # Take care of distributed/parallel training

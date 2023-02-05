@@ -1,4 +1,6 @@
+import sys
 import json
+import logging
 from dataclasses import dataclass
 
 
@@ -7,7 +9,7 @@ class TrainingConfig:
 
     # Resource directory
     resources_dir: str = ""
-    name_dir: str = "poisson_data"
+    name_dir: str = "data"
 
     # Model
     model: str = "encoder-decoder"
@@ -20,7 +22,11 @@ class TrainingConfig:
     conductivity: str = "circle"
     scale_noise: float = 5e-3
 
+    # Evaluation
+    max_eval_steps: int = 5000
+
     # Dataset
+    dataset: str = "poisson"
     ntrain: int = 30
 
     # Optimisation
@@ -44,3 +50,19 @@ class TrainingConfig:
     def to_file(self, filename: str):
         with open(filename, "w") as f:
             json.dump(self.__dict__, f)
+
+
+def get_logger(name: str = "main"):
+
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S")
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+
+    return logger
