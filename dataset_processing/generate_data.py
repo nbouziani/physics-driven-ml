@@ -32,8 +32,6 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
 
         forward: or a callable
     """
-    if ntest != 1:
-        raise NotImplementedError("The case ntest != 1 is not implemented and necessitates defining an appropriate evaluation metric.")
 
     print(f"\n Generate random fields")
     ks = random_field(V, N=ntrain+ntest, tqdm=True, seed=seed)
@@ -63,20 +61,21 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
     if noise == 'normal':
         us_obs = []
         for u in tqdm(us):
+            u_obs = Function(V).assign(u)
             noise = scale_noise * np.random.rand(V.dim())
-            u.dat.data[:] += noise
-            us_obs.append(u)
+            u_obs.dat.data[:] += noise
+            us_obs.append(u_obs)
     elif callable(noise):
         us_obs = noise(us)
     else:
         raise NotImplementedError('Noise distribution not implemented. Use "normal" or provide a callable for your noise distribution.')
 
-    print(f"\n Generated {ntrain} training samples and 1 test sample.")
+    print(f"\n Generated {ntrain} training samples and {ntest} test sample.")
 
     # Split into train/test
-    *ks_train, k_test = ks
-    *us_train, u_test = us
-    *us_obs_train, u_obs_test = us_obs
+    ks_train, ks_test = ks[:ntrain], ks[ntrain:]
+    us_train, us_test = us[:ntrain], us[ntrain:]
+    us_obs_train, us_obs_test = us_obs[:ntrain], us_obs[ntrain:]
 
     print(f"\n Saving train/test data to {os.path.abspath(data_dir)}.")
 
@@ -93,14 +92,16 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
     with CheckpointFile(os.path.join(data_dir, "test_data.h5"), 'w') as afile:
         afile.h5pyfile["ntest"] = ntest
         afile.save_mesh(mesh)
-        afile.save_function(k_test, idx=0, name="k")
-        afile.save_function(u_test, idx=0, name="u")
-        afile.save_function(u_obs_test, idx=0, name="u_obs")
+        for i, (k, u, u_obs) in enumerate(zip(ks_test, us_test, us_obs_test)):
+            afile.save_function(k, idx=i, name="k")
+            afile.save_function(u, idx=i, name="u")
+            afile.save_function(u_obs, idx=i, name="u_obs")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--ntrain", default=50, type=int, help="Number of training samples")
+    parser.add_argument("--ntest", default=1, type=int, help="Number of testing samples")
     parser.add_argument("--forward", default="poisson", type=str, help="Forward problem (e.g. 'poisson')")
     parser.add_argument("--noise", default="normal", type=str, help="Noise distribution (e.g. 'normal')")
     parser.add_argument("--scale_noise", default=5e-3, type=float, help="Noise scaling")
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("--Ly", default=1., type=float, help="Width of the domain")
     parser.add_argument("--degree", default=1, type=int, help="Degree of the finite element CG space")
     parser.add_argument("--resources_dir", default="../data", type=str, help="Resources directory")
-    parser.add_argument("--name_dir", default="poisson_data", type=str, help="Name of the directory to save the data in")
+    parser.add_argument("--name_dir", default="poisson", type=str, help="Name of the directory to save the data in")
 
     args = parser.parse_args()
 
@@ -123,5 +124,5 @@ if __name__ == "__main__":
         os.makedirs(data_dir)
     # Generate data
     generate_data(V, data_dir=data_dir, ntrain=args.ntrain,
-                  forward=args.forward, noise=args.noise,
-                  scale_noise=args.scale_noise)
+                  ntest=args.ntest, forward=args.forward,
+                  noise=args.noise, scale_noise=args.scale_noise)
