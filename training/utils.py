@@ -7,9 +7,10 @@ class TrainingConfig:
 
     # Resource directory
     resources_dir: str = ""
+    name_dir: str = "poisson_data"
 
     # Model
-    model: str = "encoder"
+    model: str = "encoder-decoder"
 
     # Domain
     Lx: float = 1.0
@@ -30,7 +31,7 @@ class TrainingConfig:
 
     def __post_init__(self):
 
-        assert self.model in {"encoder", "cnn"}
+        assert self.model in {"encoder-decoder", "cnn"}
         assert self.conductivity in {"circle", "random"}
 
     @classmethod
