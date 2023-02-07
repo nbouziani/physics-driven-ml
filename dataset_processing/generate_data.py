@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("--Ly", default=1., type=float, help="Width of the domain")
     parser.add_argument("--degree", default=1, type=int, help="Degree of the finite element CG space")
     parser.add_argument("--resources_dir", default="../data", type=str, help="Resources directory")
-    parser.add_argument("--name_dir", default="poisson", type=str, help="Name of the directory to save the data in")
+    parser.add_argument("--dataset_name", default="poisson", type=str, help="Dataset name")
 
     args = parser.parse_args()
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     mesh = RectangleMesh(args.nx, args.ny, args.Lx, args.Ly, name="mesh")
     V = FunctionSpace(mesh, "CG", args.degree)
     # Set up data directory
-    data_dir = os.path.join(args.resources_dir, "datasets", args.name_dir)
+    data_dir = os.path.join(args.resources_dir, "datasets", args.dataset_name)
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     # Generate data
