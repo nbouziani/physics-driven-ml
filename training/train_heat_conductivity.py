@@ -77,10 +77,14 @@ fd_backend = fd.get_backend()
 
 # Instantiate model
 if config.model == "encoder-decoder":
-    model = EncoderDecoder(V.dim())
+    n = V.dim()
+    model = EncoderDecoder(n)
+    config.add_input_shape(n)
 elif config.model == "cnn":
+    n = V.dim()
     model = CNN(V.dim())
-# Set double precision
+    config.add_input_shape(n)
+# Set double precision (default Firedrake type)
 model.double()
 
 optimiser = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
@@ -121,7 +125,7 @@ for epoch_num in trange(config.epochs):
 
         # TODO: Add device to batch
         # Convert to PyTorch tensors
-        k_exact, u_exact, u_obs = [fd_backend.to_ml_backend(x) for x in batch]
+        k_exact, u_obs = [fd_backend.to_ml_backend(x) for x in batch]
 
         # Forward pass
         k = model(u_obs)
