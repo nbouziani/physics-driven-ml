@@ -26,8 +26,7 @@ logger = get_logger(__name__)
 parser = argparse.ArgumentParser()
 parser.add_argument("--resources_dir", default="../data", type=str, help="Resources directory")
 parser.add_argument("--model", default="cnn", type=str, help="one of [encoder-decoder, cnn]")
-parser.add_argument("--alpha", default=5e-1, type=float, help="Regularisation parameter")
-parser.add_argument("--ntrain", default=100, type=int, help="Number of training samples")
+parser.add_argument("--alpha", default=1e4, type=float, help="Regularisation parameter")
 parser.add_argument("--epochs", default=50, type=int, help="Epochs")
 parser.add_argument("--learning_rate", default=1e-3, type=float, help="Learning rate")
 parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl]")
@@ -132,7 +131,7 @@ for epoch_num in trange(config.epochs):
         loss_k = H(k, k_exact)
 
         # Total loss
-        loss = loss_uk + config.alpha * loss_k
+        loss = loss_k + config.alpha * loss_uk
 
         # Backprop and perform Adam optimisation
         loss.backward()
