@@ -15,7 +15,7 @@ logger = get_logger()
 comm = MPI.COMM_WORLD
 
 
-def random_field(V, N=1, m=15, σ=1.4, tqdm=False, seed=2023):
+def random_field(V, N=1, m=5, σ=0.6, tqdm=False, seed=2023):
     # Generate 2D random field with m modes
     rng = default_rng(seed)
     x, y = SpatialCoordinate(V.ufl_domain())
@@ -89,7 +89,6 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_train, us_train, us_obs_train)):
             afile.save_function(k, idx=i, name="k")
-            afile.save_function(u, idx=i, name="u")
             afile.save_function(u_obs, idx=i, name="u_obs")
 
     # Save test data
@@ -98,7 +97,6 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_test, us_test, us_obs_test)):
             afile.save_function(k, idx=i, name="k")
-            afile.save_function(u, idx=i, name="u")
             afile.save_function(u_obs, idx=i, name="u_obs")
 
 
