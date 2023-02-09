@@ -23,20 +23,28 @@ def evaluate(model, config, data, disable_tqdm=False):
 
     eval_steps = min(len(data), config.max_eval_steps)
     total_error = 0.0
+	compute_error = partial(eval_error, evaluation_metric=config.evaluation_metric)
     for step_num, batch in tqdm(enumerate(data[:eval_steps]), total=eval_steps, disable=disable_tqdm):
 
         # TODO: Add device to batch
         # Convert to PyTorch tensors
-        k_exact, _, u_obs = batch
+        k_exact, u_obs = batch
         u_obs = fd_backend.to_ml_backend(u_obs)
 
         with torch.no_grad():
             kP = model(u_obs)
-            kF = fd_backend.from_ml_backend(kP, V)
-            total_error += fd.norm(kF - k_exact, norm_type=config.evaluation_metric)
+            kF = fd_backend.from_ml_backend(kP, k_exact.function_space())
+            total_error += compute_error(kF, k_exact)
 
     total_error /= eval_steps
     return total_error
+
+
+def eval_error(x, x_exact, evaluation_metric):
+    if evaluation_metric == 'avg_rel':
+        # Compute relative L2-error: ||x - x_exact||_{L2}^{2} / ||x_exact||_{L2}^{2}
+        return fd.assemble((x - x_exact)** 2 * fd.dx)/fd.assemble(x_exact** 2 * fd.dx)
+    return fd.norm(x - x_exact, norm_type=evaluation_metric)
 
 
 if __name__ == "__main__":
