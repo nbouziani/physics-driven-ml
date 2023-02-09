@@ -90,6 +90,7 @@ model.double()
 
 optimiser = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
 
+max_grad_norm = 1.0
 best_error = 0.
 
 k = Function(V)
@@ -147,6 +148,7 @@ for epoch_num in trange(config.epochs, disable=True):
 
         # Backprop and perform Adam optimisation
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=max_grad_norm)
         optimiser.step()
 
     logger.info(f"Total loss: {total_loss/len(train_data)}\
