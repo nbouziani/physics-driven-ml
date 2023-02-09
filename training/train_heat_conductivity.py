@@ -56,7 +56,7 @@ with stop_annotating():
 bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
 
 # Define the Firedrake operations to be composed with PyTorch
-def solve_poisson(k, u_exact, f, V, bcs):
+def solve_poisson(k, u_obs, f, V, bcs):
     """Solve Poisson problem"""
     u = Function(V)
     v = TestFunction(V)
@@ -64,10 +64,11 @@ def solve_poisson(k, u_exact, f, V, bcs):
     # Solve PDE (using LU factorisation)
     solve(F == 0, u, bcs=bcs, solver_parameters={'ksp_type': 'preonly', 'pc_type': 'lu'})
     # Assemble Firedrake L2-loss (and not l2-loss as in PyTorch)
-    return assemble_L2_error(u, u_exact)
+    return assemble_L2_error(u, u_obs)
 
-def assemble_L2_error(x, y):
-    return assemble( 0.5 * (x - y) ** 2 * dx)
+def assemble_L2_error(x, x_exact):
+    """Assemble L2-loss"""
+    return assemble(0.5 * (x - x_exact) ** 2 * dx)
 
 solve_poisson = functools.partial(solve_poisson, f= f, V=V, bcs=bcs)
 
@@ -87,7 +88,7 @@ optimiser = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
 best_error = 0.
 
 k = Function(V)
-u_exact = Function(V)
+u_obs = Function(V)
 k_exact = Function(V)
 
 # Get working tape
@@ -95,15 +96,15 @@ tape = get_working_tape()
 
 # Set local tape to only record the operations relevant to G on the computational graph
 set_working_tape(Tape())
-# Define PyTorch operator for solving the PDE (for computing k -> 0.5 * ||u(k) - u_exact||^{2}_{L2})
-F = ReducedFunctional(solve_poisson(k, u_exact), [Control(k), Control(u_exact)])
-G = fd.torch_op(F)
+# Define PyTorch operator for solving the PDE and compute the L2 error (for computing k -> 0.5 * ||u(k) - u_obs||^{2}_{L2})
+F = ReducedFunctional(solve_poisson(k, u_obs), [Control(k), Control(u_obs)])
+G = fd.torch_operator(F)
 
 # Set local tape to only record the operations relevant to H on the computational graph
 set_working_tape(Tape())
 # Define PyTorch operator for computing the L2-loss (for computing k -> 0.5 * ||k - k_exact||^{2}_{L2})
 F = ReducedFunctional(assemble_L2_error(k, k_exact), [Control(k), Control(k_exact)])
-H = fd.torch_op(F)
+H = fd.torch_operator(F)
 
 # Re-establish the initial tape
 set_working_tape(tape)
@@ -125,8 +126,8 @@ for epoch_num in trange(config.epochs):
         # Forward pass
         k = model(u_obs)
 
-        # Solve PDE for k_P and assemble the L2-loss: 0.5 * ||u(k) - u_exact||^{2}_{L2}
-        loss_uk = G(k, u_exact)
+        # Solve PDE for k_P and assemble the L2-loss: 0.5 * ||u(k) - u_obs||^{2}_{L2}
+        loss_uk = G(k, u_obs)
         # Assemble L2-loss: 0.5 * ||k - k_exact||^{2}_{L2}
         loss_k = H(k, k_exact)
 
