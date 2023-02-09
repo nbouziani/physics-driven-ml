@@ -5,8 +5,12 @@ from mpi4py import MPI
 from tqdm.auto import tqdm, trange
 from numpy.random import default_rng
 
+from training.utils import get_logger
+
 from firedrake import *
 
+
+logger = get_logger()
 
 comm = MPI.COMM_WORLD
 
@@ -33,10 +37,10 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
         forward: or a callable
     """
 
-    print(f"\n Generate random fields")
+    logger.info(f"\n Generate random fields")
     ks = random_field(V, N=ntrain+ntest, tqdm=True, seed=seed)
 
-    print(f"\n Generate corresponding PDE solutions")
+    logger.info(f"\n Generate corresponding PDE solutions")
 
     if forward == 'poisson':
         us = []
@@ -55,7 +59,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
     else:
         raise NotImplementedError('Forward problem not implemented. Use "poisson" or provide a callable for your forward problem.')
 
-    print(f"\n Form noisy observations of PDE solutions")
+    logger.info(f"\n Form noisy observations of PDE solutions")
 
     # Add noise to PDE solutions
     if noise == 'normal':
@@ -70,14 +74,14 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
     else:
         raise NotImplementedError('Noise distribution not implemented. Use "normal" or provide a callable for your noise distribution.')
 
-    print(f"\n Generated {ntrain} training samples and {ntest} test sample.")
+    logger.info(f"\n Generated {ntrain} training samples and {ntest} test sample.")
 
     # Split into train/test
     ks_train, ks_test = ks[:ntrain], ks[ntrain:]
     us_train, us_test = us[:ntrain], us[ntrain:]
     us_obs_train, us_obs_test = us_obs[:ntrain], us_obs[ntrain:]
 
-    print(f"\n Saving train/test data to {os.path.abspath(data_dir)}.")
+    logger.info(f"\n Saving train/test data to {os.path.abspath(data_dir)}.")
 
     # Save train data
     with CheckpointFile(os.path.join(data_dir, "train_data.h5"), 'w') as afile:
