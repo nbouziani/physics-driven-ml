@@ -28,7 +28,7 @@ parser.add_argument("--resources_dir", default="../data", type=str, help="Resour
 parser.add_argument("--model", default="cnn", type=str, help="one of [encoder-decoder, cnn]")
 parser.add_argument("--alpha", default=1e4, type=float, help="Regularisation parameter")
 parser.add_argument("--epochs", default=50, type=int, help="Epochs")
-parser.add_argument("--learning_rate", default=1e-3, type=float, help="Learning rate")
+parser.add_argument("--learning_rate", default=5e-5, type=float, help="Learning rate")
 parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl]")
 parser.add_argument("--max_eval_steps", default=5000, type=int, help="Maximum number of evaluation steps")
 parser.add_argument("--dataset", default="poisson", type=str, help="Dataset name: one of [poisson]")
