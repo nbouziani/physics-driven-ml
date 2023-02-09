@@ -1,5 +1,9 @@
+import os
+import torch
 import torch.nn.functional as F
+
 from torch.nn import Module, Flatten, Linear
+from training.utils import TrainingConfig
 
 
 class EncoderDecoder(Module):
@@ -28,3 +32,15 @@ class EncoderDecoder(Module):
         # [batch_size, n]
         decoded = self.decode(hidden)
         return F.relu(decoded)
+
+    @classmethod
+    def from_pretrained(cls, model_dir: str):
+        # Load training args
+        training_args = os.path.join(model_dir, "training_args.json")
+        training_args = TrainingConfig.from_file(training_args)
+        # Instantiate model
+        model = cls(training_args.input_shape)
+        # Load pre-trained model state dict
+        pretrained_dict = torch.load(os.path.join(model_dir, "model.pt"), map_location=torch.device("cpu"))
+        model.load_state_dict(pretrained_dict)
+        return model
