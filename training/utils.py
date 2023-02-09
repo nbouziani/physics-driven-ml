@@ -1,6 +1,8 @@
 import sys
 import json
 import logging
+import firedrake as fd
+import matplotlib.pyplot as plt
 from dataclasses import dataclass
 
 
@@ -9,10 +11,14 @@ class TrainingConfig:
 
     # Resource directory
     resources_dir: str = ""
-    name_dir: str = "data"
+    data_dir: str = ""
+    model_dir: str = ""
+    model_version: str = ""
 
     # Model
     model: str = "encoder-decoder"
+    input_shape: int = 1
+    device: str = "cpu"
 
     # Domain
     Lx: float = 1.0
@@ -28,6 +34,7 @@ class TrainingConfig:
     # Dataset
     dataset: str = "poisson"
     ntrain: int = 30
+    eval_set: str = "test"
 
     # Optimisation
     alpha: float = 1e-3
@@ -35,16 +42,21 @@ class TrainingConfig:
     learning_rate: float = 1e-3
     evaluation_metric: str = "L2"
 
+    # Utils
+    visualise: bool = False
+
     def __post_init__(self):
 
         assert self.model in {"encoder-decoder", "cnn"}
         assert self.conductivity in {"circle", "random"}
 
+    def add_input_shape(self, input_shape: int):
+        self.input_shape = input_shape
+
     @classmethod
-    def from_file(cls, filepath: str, data_dir: str):
+    def from_file(cls, filepath: str):
         with open(filepath, "r") as f:
             cfg = json.load(f)
-            cfg["resources_dir"] = data_dir
             return cls(**cfg)
 
     def to_file(self, filename: str):
