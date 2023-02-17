@@ -1,6 +1,5 @@
 import os
 import argparse
-import sys
 import functools
 
 import torch
@@ -12,7 +11,6 @@ from tqdm.auto import tqdm, trange
 from firedrake import *
 from firedrake_adjoint import *
 
-from dataset_processing.generate_data import random_field
 from dataset_processing.load_data import load_dataset
 from models.autoencoder import EncoderDecoder
 from models.cnn import CNN
@@ -57,6 +55,7 @@ with stop_annotating():
 # Define Dirichlet boundary conditions
 bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
 
+
 # Define the Firedrake operations to be composed with PyTorch
 def solve_poisson(κ, u_obs, f, V, bcs):
     """Solve Poisson problem"""
@@ -68,11 +67,13 @@ def solve_poisson(κ, u_obs, f, V, bcs):
     # Assemble Firedrake L2-loss (and not l2-loss as in PyTorch)
     return assemble_L2_error(u, u_obs)
 
+
 def assemble_L2_error(x, x_exact):
     """Assemble L2-loss"""
     return assemble(0.5 * (x - x_exact) ** 2 * dx)
 
-solve_poisson = functools.partial(solve_poisson, f= f, V=V, bcs=bcs)
+
+solve_poisson = functools.partial(solve_poisson, f=f, V=V, bcs=bcs)
 
 # Get PyTorch backend from Firedrake (for mapping from Firedrake to PyTorch and vice versa)
 fd_backend = fd.get_backend()
@@ -157,8 +158,8 @@ for epoch_num in trange(config.epochs, disable=True):
     error = evaluate(model, config, test_data, disable_tqdm=True)
     logger.info(f"Error ({config.evaluation_metric}): {error}")
 
-    #error_train, *_ = evaluate(model, config, train_data[:50], disable_tqdm=True)
-    #logger.info(f"Debug Error ({config.evaluation_metric}): {error_train}")
+    # error_train, *_ = evaluate(model, config, train_data[:50], disable_tqdm=True)
+    # logger.info(f"Debug Error ({config.evaluation_metric}): {error_train}")
 
     # Save best-performing model
     if error < best_error or epoch_num == 0:
@@ -170,9 +171,8 @@ for epoch_num in trange(config.epochs, disable=True):
             os.makedirs(model_dir)
         # Save model
         logger.info(f"Saving model checkpoint to {model_dir}\n")
-        model_to_save = (
-                model.module if hasattr(model, "module") else model
-            )  # Take care of distributed/parallel training
+        # Take care of distributed/parallel training
+        model_to_save = (model.module if hasattr(model, "module") else model)
         torch.save(model_to_save.state_dict(), os.path.join(model_dir, "model.pt"))
         # Save training arguments together with the trained model
         config.to_file(os.path.join(model_dir, "training_args.json"))

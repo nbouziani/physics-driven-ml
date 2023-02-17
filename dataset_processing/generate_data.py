@@ -16,7 +16,7 @@ comm = MPI.COMM_WORLD
 
 
 def random_field(V, N=1, m=5, σ=0.6, tqdm=False, seed=2023):
-    # Generate 2D random field with m modes
+    """Generate N 2D random fields with m modes."""
     rng = default_rng(seed)
     x, y = SpatialCoordinate(V.ufl_domain())
     fields = []
@@ -32,15 +32,12 @@ def random_field(V, N=1, m=5, σ=0.6, tqdm=False, seed=2023):
 
 
 def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='normal', scale_noise=1., seed=1234):
-    """Generate train/test data for
+    """Generate train/test data for a given PDE and noise distribution."""
 
-        forward: or a callable
-    """
-
-    logger.info(f"\n Generate random fields")
+    logger.info("\n Generate random fields")
     ks = random_field(V, N=ntrain+ntest, tqdm=True, seed=seed)
 
-    logger.info(f"\n Generate corresponding PDE solutions")
+    logger.info("\n Generate corresponding PDE solutions")
 
     if forward == 'poisson':
         us = []
@@ -59,7 +56,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
     else:
         raise NotImplementedError('Forward problem not implemented. Use "poisson" or provide a callable for your forward problem.')
 
-    logger.info(f"\n Form noisy observations of PDE solutions")
+    logger.info("\n Form noisy observations of PDE solutions")
 
     # Add noise to PDE solutions
     if noise == 'normal':
@@ -122,8 +119,12 @@ if __name__ == "__main__":
     V = FunctionSpace(mesh, "CG", args.degree)
     # Set up data directory
     data_dir = os.path.join(args.resources_dir, "datasets", args.dataset_name)
-    if not os.path.exists(data_dir):
+    # Make data directory while dealing with parallelism
+    try:
         os.makedirs(data_dir)
+    except FileExistsError:
+        # Another process created the directory
+        pass
     # Generate data
     generate_data(V, data_dir=data_dir, ntrain=args.ntrain,
                   ntest=args.ntest, forward=args.forward,

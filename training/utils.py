@@ -1,8 +1,6 @@
 import sys
 import json
 import logging
-import firedrake as fd
-import matplotlib.pyplot as plt
 from dataclasses import dataclass
 
 

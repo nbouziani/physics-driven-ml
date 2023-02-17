@@ -17,6 +17,7 @@ logger = get_logger("Evaluation")
 
 fd_backend = fd.get_backend()
 
+
 def evaluate(model, config, data, disable_tqdm=False):
 
     model.eval()
@@ -42,7 +43,7 @@ def evaluate(model, config, data, disable_tqdm=False):
 def eval_error(x, x_exact, evaluation_metric):
     if evaluation_metric == 'avg_rel':
         # Compute relative L2-error: ||x - x_exact||_{L2}^{2} / ||x_exact||_{L2}^{2}
-        return fd.assemble((x - x_exact)** 2 * fd.dx)/fd.assemble(x_exact** 2 * fd.dx)
+        return fd.assemble((x - x_exact) ** 2 * fd.dx)/fd.assemble(x_exact ** 2 * fd.dx)
     return fd.norm(x - x_exact, norm_type=evaluation_metric)
 
 
@@ -81,4 +82,3 @@ if __name__ == "__main__":
 
     error, k_learned = evaluate(model, config, data)
     logger.info(f"\n\t Error (metric: {config.evaluation_metric}): {error:.4e}")
-
