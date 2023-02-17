@@ -57,11 +57,11 @@ with stop_annotating():
 bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
 
 # Define the Firedrake operations to be composed with PyTorch
-def solve_poisson(k, u_obs, f, V, bcs):
+def solve_poisson(κ, u_obs, f, V, bcs):
     """Solve Poisson problem"""
     u = Function(V)
     v = TestFunction(V)
-    F = (inner(exp(k) * grad(u), grad(v)) - inner(f, v)) * dx
+    F = (inner(exp(κ) * grad(u), grad(v)) - inner(f, v)) * dx
     # Solve PDE (using LU factorisation)
     solve(F == 0, u, bcs=bcs, solver_parameters={'ksp_type': 'preonly', 'pc_type': 'lu'})
     # Assemble Firedrake L2-loss (and not l2-loss as in PyTorch)
@@ -93,27 +93,24 @@ optimiser = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
 max_grad_norm = 1.0
 best_error = 0.
 
-k = Function(V)
+κ = Function(V)
 u_obs = Function(V)
-k_exact = Function(V)
+κ_exact = Function(V)
 
 # Get working tape
 tape = get_working_tape()
 
-# Set local tape to only record the operations relevant to G on the computational graph
-set_working_tape(Tape())
-# Define PyTorch operator for solving the PDE and compute the L2 error (for computing k -> 0.5 * ||u(k) - u_obs||^{2}_{L2})
-F = ReducedFunctional(solve_poisson(k, u_obs), [Control(k), Control(u_obs)])
-G = fd.torch_operator(F)
+# Set tape locally to only record the operations relevant to G on the computational graph
+with set_working_tape() as tape:
+    # Define PyTorch operator for solving the PDE and compute the L2 error (for computing κ -> 0.5 * ||u(κ) - u_obs||^{2}_{L2})
+    F = ReducedFunctional(solve_poisson(κ, u_obs), [Control(κ), Control(u_obs)])
+    G = fd.torch_operator(F)
 
-# Set local tape to only record the operations relevant to H on the computational graph
-set_working_tape(Tape())
-# Define PyTorch operator for computing the L2-loss (for computing k -> 0.5 * ||k - k_exact||^{2}_{L2})
-F = ReducedFunctional(assemble_L2_error(k, k_exact), [Control(k), Control(k_exact)])
-H = fd.torch_operator(F)
-
-# Re-establish the initial tape
-set_working_tape(tape)
+# Set tape locally to only record the operations relevant to H on the computational graph
+with set_working_tape() as tape:
+    # Define PyTorch operator for computing the L2-loss (for computing κ -> 0.5 * ||κ - κ_exact||^{2}_{L2})
+    F = ReducedFunctional(assemble_L2_error(κ, κ_exact), [Control(κ), Control(κ_exact)])
+    H = fd.torch_operator(F)
 
 # Training loop
 for epoch_num in trange(config.epochs, disable=True):
@@ -122,28 +119,28 @@ for epoch_num in trange(config.epochs, disable=True):
     model.train()
 
     total_loss = 0.0
-    total_loss_uk = 0.0
-    total_loss_k = 0.0
+    total_loss_uκ = 0.0
+    total_loss_κ = 0.0
     for step_num, batch in tqdm(enumerate(train_data), total=len(train_data)):
 
         model.zero_grad()
 
         # TODO: Add device to batch
         # Convert to PyTorch tensors
-        k_exact, u_obs = [fd_backend.to_ml_backend(x) for x in batch]
+        κ_exact, u_obs = [fd_backend.to_ml_backend(x) for x in batch]
 
         # Forward pass
-        k = model(u_obs)
+        κ = model(u_obs)
 
-        # Solve PDE for k_P and assemble the L2-loss: 0.5 * ||u(k) - u_obs||^{2}_{L2}
-        loss_uk = G(k, u_obs)
-        total_loss_uk += loss_uk.item()
-        # Assemble L2-loss: 0.5 * ||k - k_exact||^{2}_{L2}
-        loss_k = H(k, k_exact)
-        total_loss_k += loss_k.item()
+        # Solve PDE for κ_P and assemble the L2-loss: 0.5 * ||u(κ) - u_obs||^{2}_{L2}
+        loss_uκ = G(κ, u_obs)
+        total_loss_uκ += loss_uκ.item()
+        # Assemble L2-loss: 0.5 * ||κ - κ_exact||^{2}_{L2}
+        loss_κ = H(κ, κ_exact)
+        total_loss_κ += loss_κ.item()
 
         # Total loss
-        loss = loss_k + config.alpha * loss_uk
+        loss = loss_κ + config.alpha * loss_uκ
         total_loss += loss.item()
 
         # Backprop and perform Adam optimisation
@@ -152,10 +149,10 @@ for epoch_num in trange(config.epochs, disable=True):
         optimiser.step()
 
     logger.info(f"Total loss: {total_loss/len(train_data)}\
-                  \n\t Loss_uk: {total_loss_uk/len(train_data)}  Loss_k: {total_loss_k/len(train_data)}")
+                  \n\t Loss uκ: {total_loss_uκ/len(train_data)}  Loss κ: {total_loss_κ/len(train_data)}")
 
     # Evaluation on the test random field
-    error, *_ = evaluate(model, config, test_data, disable_tqdm=True)
+    error = evaluate(model, config, test_data, disable_tqdm=True)
     logger.info(f"Error ({config.evaluation_metric}): {error}")
 
     #error_train, *_ = evaluate(model, config, train_data[:50], disable_tqdm=True)
