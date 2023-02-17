@@ -23,13 +23,12 @@ def evaluate(model, config, data, disable_tqdm=False):
 
     eval_steps = min(len(data), config.max_eval_steps)
     total_error = 0.0
-	compute_error = partial(eval_error, evaluation_metric=config.evaluation_metric)
+    compute_error = partial(eval_error, evaluation_metric=config.evaluation_metric)
     for step_num, batch in tqdm(enumerate(data[:eval_steps]), total=eval_steps, disable=disable_tqdm):
 
-        # TODO: Add device to batch
         # Convert to PyTorch tensors
         k_exact, u_obs = batch
-        u_obs = fd_backend.to_ml_backend(u_obs)
+        u_obs = fd_backend.to_ml_backend(u_obs).to(config.device, non_blocking=True)
 
         with torch.no_grad():
             kP = model(u_obs)
@@ -77,6 +76,8 @@ if __name__ == "__main__":
         model = CNN.from_pretrained(model_dir)
     # Set double precision (default Firedrake type)
     model.double()
+    # Move model to device
+    model.to(config.device)
 
     error, k_learned = evaluate(model, config, data)
     logger.info(f"\n\t Error (metric: {config.evaluation_metric}): {error:.4e}")

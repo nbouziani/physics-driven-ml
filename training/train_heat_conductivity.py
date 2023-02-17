@@ -34,6 +34,7 @@ parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluat
 parser.add_argument("--max_eval_steps", default=5000, type=int, help="Maximum number of evaluation steps")
 parser.add_argument("--dataset", default="poisson", type=str, help="Dataset name: one of [poisson]")
 parser.add_argument("--model_dir", default="model", type=str, help="Directory name to save trained models")
+parser.add_argument("--device", default="cpu", type=str, help="Device identifier (e.g. 'cuda:0' or 'cpu')")
 
 args = parser.parse_args()
 config = TrainingConfig(**dict(args._get_kwargs()))
@@ -87,6 +88,8 @@ elif config.model == "cnn":
     config.add_input_shape(n)
 # Set double precision (default Firedrake type)
 model.double()
+# Move model to device
+model.to(config.device)
 
 optimiser = optim.AdamW(model.parameters(), lr=config.learning_rate, eps=1e-8)
 
@@ -125,9 +128,8 @@ for epoch_num in trange(config.epochs, disable=True):
 
         model.zero_grad()
 
-        # TODO: Add device to batch
         # Convert to PyTorch tensors
-        κ_exact, u_obs = [fd_backend.to_ml_backend(x) for x in batch]
+        κ_exact, u_obs = [fd_backend.to_ml_backend(x).to(config.device, non_blocking=True) for x in batch]
 
         # Forward pass
         κ = model(u_obs)
