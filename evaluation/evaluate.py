@@ -41,7 +41,7 @@ def evaluate(model, config, data, disable_tqdm=False):
 
 
 def eval_error(x, x_exact, evaluation_metric):
-    if evaluation_metric == 'avg_rel':
+    if evaluation_metric == "avg_rel":
         # Compute relative L2-error: ||x - x_exact||_{L2}^{2} / ||x_exact||_{L2}^{2}
         return fd.assemble((x - x_exact) ** 2 * fd.dx)/fd.assemble(x_exact ** 2 * fd.dx)
     return fd.norm(x - x_exact, norm_type=evaluation_metric)

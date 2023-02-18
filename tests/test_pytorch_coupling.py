@@ -1,8 +1,6 @@
 import pytest
 
 import torch
-import torch.nn.functional as torch_func
-from torch.nn import Module, Flatten, Linear
 
 from firedrake import *
 from firedrake_adjoint import *

@@ -14,36 +14,28 @@ class CNN(Module):
 
         self.linear_in = Linear(self.dim, self.n**2)
         self.linear_in2 = Linear(self.n**2, self.n**2)
-        self.linear_out2 = Linear(self.n*(self.n - 2)+1, self.n*(self.n - 2)+1) 
+        self.linear_out2 = Linear(self.n*(self.n - 2)+1, self.n*(self.n - 2)+1)
         self.linear_out = Linear(self.n*(self.n - 2)+1, self.dim)
 
-        self.encoder = Sequential(
-                            Conv2d(1, 32, kernel_size=4,
-                                      padding=2),
-                            BatchNorm2d(32),
-                            ReLU(True),
-                            MaxPool2d(2, 2),
-                            Conv2d(32, 64, kernel_size=4,
-                                      padding=1),
-                            BatchNorm2d(64),
-                            ReLU(True),
-                            MaxPool2d(2, 2),
-                            Conv2d(64, 128, kernel_size=3,
-                                      padding=2),
-                            ReLU(True))
+        self.encoder = Sequential(Conv2d(1, 32, kernel_size=4, padding=2),
+                                  BatchNorm2d(32),
+                                  ReLU(True),
+                                  MaxPool2d(2, 2),
+                                  Conv2d(32, 64, kernel_size=4, padding=1),
+                                  BatchNorm2d(64),
+                                  ReLU(True),
+                                  MaxPool2d(2, 2),
+                                  Conv2d(64, 128, kernel_size=3, padding=2),
+                                  ReLU(True))
 
-        self.decoder = Sequential(
-                            ConvTranspose2d(128, 64, kernel_size=4,
-                                               padding=2),
-                            BatchNorm2d(64),
-                            ReLU(True),
-                            ConvTranspose2d(64, 32, kernel_size=3,
-                                               stride=2, padding=1),
-                            BatchNorm2d(32),
-                            ReLU(True),
-                            ConvTranspose2d(32, 1, kernel_size=4, stride=2,
-                                               padding=1),
-                            Tanh())
+        self.decoder = Sequential(ConvTranspose2d(128, 64, kernel_size=4, padding=2),
+                                  BatchNorm2d(64),
+                                  ReLU(True),
+                                  ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1),
+                                  BatchNorm2d(32),
+                                  ReLU(True),
+                                  ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1),
+                                  Tanh())
 
     def forward(self, x):
         # x: [batch_size, dim]
@@ -70,4 +62,3 @@ class CNN(Module):
         pretrained_dict = torch.load(os.path.join(model_dir, "model.pt"), map_location=torch.device("cpu"))
         model.load_state_dict(pretrained_dict)
         return model
-
