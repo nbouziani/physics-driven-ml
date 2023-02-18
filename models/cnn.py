@@ -1,5 +1,6 @@
 import os
 import torch
+import torch.nn.functional as F
 from training.utils import TrainingConfig
 from torch.nn import Module, Sequential, Linear, ReLU, Tanh, MaxPool2d, Conv2d, ConvTranspose2d, BatchNorm2d
 
