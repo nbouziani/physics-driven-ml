@@ -15,12 +15,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  physics-driven-ml-tests:
+  build:
 
-    runs-on: ubuntu-latest
-    container: firedrakeproject/firedrake-env:latest
+    runs-on: self-hosted
+    container:
+      image: firedrakeproject/firedrake-vanilla:latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
+    - name: Setup python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
     - name: Install torch
       run: |
         pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
