@@ -17,7 +17,7 @@ concurrency:
 jobs:
   physics-driven-ml-tests:
 
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     container: firedrakeproject/firedrake-env:latest
     steps:
     - uses: actions/checkout@v3
