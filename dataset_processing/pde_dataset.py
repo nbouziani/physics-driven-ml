@@ -2,8 +2,7 @@ import os
 import numpy as np
 import torch
 
-from dataclasses import dataclass
-from typing import NamedTuple, List, Tuple, Any, Dict, Optional
+from typing import NamedTuple, List, Optional
 
 from firedrake import CheckpointFile, get_backend, Function
 
@@ -80,7 +79,7 @@ class PDEDataset(Dataset):
         n = max(e.u_obs.size(-1) for e in batch_elements)
         m = max(e.target.size(-1) for e in batch_elements)
 
-        u_obs = torch.zeros(batch_size, n, dtype=batch_elements[0].u_obs.dtype)        
+        u_obs = torch.zeros(batch_size, n, dtype=batch_elements[0].u_obs.dtype)
         target = torch.zeros(batch_size, m, dtype=batch_elements[0].target.dtype)
         target_fd = []
         u_obs_fd = []
