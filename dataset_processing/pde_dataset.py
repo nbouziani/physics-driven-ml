@@ -2,33 +2,11 @@ import os
 import numpy as np
 import torch
 
-from typing import NamedTuple, List, Optional
-
-from firedrake import CheckpointFile, get_backend, Function
-
-from torch import Tensor
+from typing import List
+from firedrake import CheckpointFile, get_backend
 from torch.utils.data import Dataset
 
-
-class BatchElement(NamedTuple):
-    """
-    Batch element for PDE-based datasets as a tuple of PyTorch and Firedrake tensors.
-    """
-    u_obs: Tensor  # shape = (n,)
-    target: Tensor  # shape = (m,)
-    u_obs_fd: Function
-    target_fd: Function
-
-
-class BatchedElement(NamedTuple):
-    """
-    Represent tensors for a list/batch of `BatchElement` that have been collated.
-    """
-    u_obs: Tensor  # shape = (batch_size, n)
-    target: Tensor  # shape = (batch_size, m)
-    u_obs_fd: List[Function]
-    target_fd: List[Function]
-    batch_elements: Optional[List[BatchElement]] = None
+from dataset_processing.data_types import BatchElement, BatchedElement
 
 
 class PDEDataset(Dataset):
