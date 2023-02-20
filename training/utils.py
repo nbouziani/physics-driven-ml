@@ -37,6 +37,7 @@ class TrainingConfig:
     # Optimisation
     alpha: float = 1e-3
     epochs: int = 100
+    batch_size: int = 1
     learning_rate: float = 1e-3
     evaluation_metric: str = "L2"
 
@@ -47,6 +48,11 @@ class TrainingConfig:
 
         assert self.model in {"encoder-decoder", "cnn"}
         assert self.conductivity in {"circle", "random"}
+
+        if self.batch_size != 1:
+            # This can easily be implemented by using Firedrake ensemble parallelism.
+            # Ensemble parallelism is critical if the Firedrake operator composed with PyTorch is expensive to evaluate, e.g. when solving a PDE.
+            raise NotImplementedError("Batch size > 1 necessitates using Firedrake ensemble parallelism. See https://www.firedrakeproject.org/parallelism.html#ensemble-parallelism")
 
     def add_input_shape(self, input_shape: int):
         self.input_shape = input_shape

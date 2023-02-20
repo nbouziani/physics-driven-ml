@@ -82,7 +82,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
 
     # Save train data
     with CheckpointFile(os.path.join(data_dir, "train_data.h5"), 'w') as afile:
-        afile.h5pyfile["ntrain"] = ntrain
+        afile.h5pyfile["n"] = ntrain
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_train, us_train, us_obs_train)):
             afile.save_function(k, idx=i, name="k")
@@ -90,7 +90,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
 
     # Save test data
     with CheckpointFile(os.path.join(data_dir, "test_data.h5"), 'w') as afile:
-        afile.h5pyfile["ntest"] = ntest
+        afile.h5pyfile["n"] = ntest
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_test, us_test, us_obs_test)):
             afile.save_function(k, idx=i, name="k")

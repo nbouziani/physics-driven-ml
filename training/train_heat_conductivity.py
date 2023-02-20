@@ -8,10 +8,12 @@ import firedrake as fd
 
 from tqdm.auto import tqdm, trange
 
+from torch.utils.data import DataLoader
+
 from firedrake import *
 from firedrake_adjoint import *
 
-from dataset_processing.load_data import load_dataset
+from dataset_processing.pde_dataset import PDEDataset, BatchedElement
 from models.autoencoder import EncoderDecoder
 from models.cnn import CNN
 from training.utils import TrainingConfig, get_logger
@@ -27,6 +29,7 @@ parser.add_argument("--resources_dir", default="../data", type=str, help="Resour
 parser.add_argument("--model", default="cnn", type=str, help="one of [encoder-decoder, cnn]")
 parser.add_argument("--alpha", default=1e4, type=float, help="Regularisation parameter")
 parser.add_argument("--epochs", default=50, type=int, help="Epochs")
+parser.add_argument("--batch_size", default=1, type=int, help="Batch size")
 parser.add_argument("--learning_rate", default=5e-5, type=float, help="Learning rate")
 parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl]")
 parser.add_argument("--max_eval_steps", default=5000, type=int, help="Maximum number of evaluation steps")
@@ -37,14 +40,15 @@ parser.add_argument("--device", default="cpu", type=str, help="Device identifier
 args = parser.parse_args()
 config = TrainingConfig(**dict(args._get_kwargs()))
 
+# Load train dataset
+train_dataset = PDEDataset(dataset=config.dataset, dataset_split="train", data_dir=config.resources_dir)
+train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, collate_fn=train_dataset.collate, shuffle=False)
+# Load test dataset
+test_dataset = PDEDataset(dataset=config.dataset, dataset_split="test", data_dir=config.resources_dir)
+test_dataloader = DataLoader(test_dataset, batch_size=config.batch_size, collate_fn=test_dataset.collate, shuffle=False)
 
-# Load dataset
-dataset_dir = os.path.join(config.resources_dir, "datasets", config.dataset)
-if not os.path.exists(dataset_dir):
-    raise ValueError(f"Dataset directory {os.path.abspath(dataset_dir)} does not exist")
-
-mesh, train_data, test_data = load_dataset(config)
-
+# Get mesh from dataset
+mesh = train_dataset.mesh
 # Define function space and test function
 V = FunctionSpace(mesh, "CG", 1)
 v = TestFunction(V)
@@ -125,12 +129,14 @@ for epoch_num in trange(config.epochs, disable=True):
     total_loss = 0.0
     total_loss_uκ = 0.0
     total_loss_κ = 0.0
-    for step_num, batch in tqdm(enumerate(train_data), total=len(train_data)):
+    for step_num, batch in tqdm(enumerate(train_dataloader), total=len(train_dataloader)):
 
         model.zero_grad()
 
-        # Convert to PyTorch tensors
-        κ_exact, u_obs = [fd_backend.to_ml_backend(x).to(config.device, non_blocking=True) for x in batch]
+        # Move batch to device
+        batch = BatchedElement(*[x.to(config.device, non_blocking=True) if isinstance(x, torch.Tensor) else x for x in batch])
+        κ_exact = batch.target
+        u_obs = batch.u_obs
 
         # Forward pass
         κ = model(u_obs)
@@ -138,6 +144,7 @@ for epoch_num in trange(config.epochs, disable=True):
         # Solve PDE for κ_P and assemble the L2-loss: 0.5 * ||u(κ) - u_obs||^{2}_{L2}
         loss_uκ = G(κ, u_obs)
         total_loss_uκ += loss_uκ.item()
+
         # Assemble L2-loss: 0.5 * ||κ - κ_exact||^{2}_{L2}
         loss_κ = H(κ, κ_exact)
         total_loss_κ += loss_κ.item()
@@ -151,11 +158,11 @@ for epoch_num in trange(config.epochs, disable=True):
         torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=max_grad_norm)
         optimiser.step()
 
-    logger.info(f"Total loss: {total_loss/len(train_data)}\
-                  \n\t Loss uκ: {total_loss_uκ/len(train_data)}  Loss κ: {total_loss_κ/len(train_data)}")
+    logger.info(f"Total loss: {total_loss/len(train_dataloader)}\
+                  \n\t Loss uκ: {total_loss_uκ/len(train_dataloader)}  Loss κ: {total_loss_κ/len(train_dataloader)}")
 
     # Evaluation on the test random field
-    error = evaluate(model, config, test_data, disable_tqdm=True)
+    error = evaluate(model, config, test_dataloader, disable_tqdm=True)
     logger.info(f"Error ({config.evaluation_metric}): {error}")
 
     # error_train, *_ = evaluate(model, config, train_data[:50], disable_tqdm=True)
