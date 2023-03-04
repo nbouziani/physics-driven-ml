@@ -31,7 +31,7 @@ def random_field(V, N=1, m=5, σ=0.6, tqdm=False, seed=2023):
     return fields
 
 
-def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='normal', scale_noise=1., seed=1234):
+def generate_data(V, data_dir, ntrain=50, ntest=1, forward="heat", noise="normal", scale_noise=1., seed=1234):
     """Generate train/test data for a given PDE and noise distribution."""
 
     logger.info("\n Generate random fields")
@@ -39,7 +39,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
 
     logger.info("\n Generate corresponding PDE solutions")
 
-    if forward == 'poisson':
+    if forward == "heat":
         us = []
         v = TestFunction(V)
         x, y = SpatialCoordinate(V.ufl_domain())
@@ -54,7 +54,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward='poisson', noise='nor
     elif callable(forward):
         us = forward(ks, V)
     else:
-        raise NotImplementedError('Forward problem not implemented. Use "poisson" or provide a callable for your forward problem.')
+        raise NotImplementedError('Forward problem not implemented. Use "heat" or provide a callable for your forward problem.')
 
     logger.info("\n Form noisy observations of PDE solutions")
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--ntrain", default=50, type=int, help="Number of training samples")
     parser.add_argument("--ntest", default=1, type=int, help="Number of testing samples")
-    parser.add_argument("--forward", default="poisson", type=str, help="Forward problem (e.g. 'poisson')")
+    parser.add_argument("--forward", default="heat", type=str, help="Forward problem (e.g. 'heat')")
     parser.add_argument("--noise", default="normal", type=str, help="Noise distribution (e.g. 'normal')")
     parser.add_argument("--scale_noise", default=5e-3, type=float, help="Noise scaling")
     parser.add_argument("--nx", default=50, type=int, help="Number of cells in x-direction")
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--Ly", default=1., type=float, help="Width of the domain")
     parser.add_argument("--degree", default=1, type=int, help="Degree of the finite element CG space")
     parser.add_argument("--resources_dir", default="../data", type=str, help="Resources directory")
-    parser.add_argument("--dataset_name", default="poisson", type=str, help="Dataset name")
+    parser.add_argument("--dataset_name", default="heat_conductivity", type=str, help="Dataset name")
 
     args = parser.parse_args()
 

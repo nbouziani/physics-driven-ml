@@ -31,7 +31,7 @@ parser.add_argument("--alpha", default=1e4, type=float, help="Regularisation par
 parser.add_argument("--epochs", default=50, type=int, help="Epochs")
 parser.add_argument("--batch_size", default=1, type=int, help="Batch size")
 parser.add_argument("--learning_rate", default=5e-5, type=float, help="Learning rate")
-parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl]")
+parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl, , avg_rel]")
 parser.add_argument("--max_eval_steps", default=5000, type=int, help="Maximum number of evaluation steps")
 parser.add_argument("--dataset", default="poisson", type=str, help="Dataset name: one of [poisson]")
 parser.add_argument("--model_dir", default="model", type=str, help="Directory name to save trained models")
