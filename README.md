@@ -40,11 +40,11 @@ pytest tests
 
 ## Generate dataset
 
-You can generate your own dataset with . This generates pairs $(\kappa_{i}, u^{obs}_{i})_{1 \le i\le n}$ where $\kappa_{i}$ is the parameter of interest (control) and $u^{obs}_{i}$ refers to the observed data, which are obtained by computing the forward problem for a given $\kappa_{i}$ and adding noise to the forward solution. In other words, we have:
+You can generate your own dataset with . This generates pairs $\lbrace\kappa_{i}, u_{i}^{obs}\rbrace_{1 \le i\le n}$ where $\kappa_{i}$ is the parameter of interest (control) and $u_{i}^{obs}$ refers to the observed data, which are obtained by computing the forward problem for a given $\kappa_{i}$ and adding noise to the forward solution. In other words, we have:
 
-$$u^{obs}_{i} = \mathcal{F}(\kappa_{i}) + \eps \quad \forall i \in [|1, n|]$$
+$$u^{obs}_{i} = \mathcal{F}(\kappa_{i}) + \varepsilon \quad \forall i \in [|1, n|]$$
 
-where $\eps$ is noise, and $\mathcal{F}$ is the forward operator that returns the solution of the correponding PDE for a given control $\kappa_{i}$.
+where $\varepsilon$ is noise, and $\mathcal{F}$ is the forward operator that returns the solution of the correponding PDE for a given control $\kappa_{i}$.
 
 For example, the following line will generate 500 training samples and 50 test samples for the heat time-independent forward problem (cf. section 5 paper). This will store this dataset named "heat_conductivity_500" into `./data/datasets`.
 
