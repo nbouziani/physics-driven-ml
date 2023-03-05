@@ -3,6 +3,13 @@
 Examples of physics-driven machine learning models using PyTorch and Firedrake
 
 
+## Table of Contents
+* [Setup](#setup)
+* [Generate dataset](#generate-dataset)
+* [Training](#training)
+* [Evaluation](#evaluation)
+* [Citation](#citation)
+
 ## Setup
 
 This work relies on the Firedrake finite element system, which needs to be installed.
@@ -78,3 +85,5 @@ For evaluation, we can leverage the full armoury of norms suited to PDE-based pr
 cd evaluation
 python evaluate.py --model_dir cnn_heat_conductivity --model_version [...] --evaluation_metric avg_rel
 ```
+
+## Citation
