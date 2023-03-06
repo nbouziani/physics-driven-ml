@@ -23,6 +23,13 @@ jobs:
       options: --user root
     steps:
     - uses: actions/checkout@v2
+    - name: Check out branches
+      shell: bash -l {0}
+      run: |
+        cd /home/firedrake/firedrake/src/firedrake
+        git checkout pytorch_coupling
+        cd /home/firedrake/firedrake/src/pyadjoint
+        git checkout adjoint-1-forms
     - name: Install torch
       shell: bash -l {0}
       run: |
