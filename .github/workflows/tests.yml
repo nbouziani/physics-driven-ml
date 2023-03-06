@@ -26,8 +26,10 @@ jobs:
     - name: Check out branches
       shell: bash -l {0}
       run: |
+        git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
         cd /home/firedrake/firedrake/src/firedrake
         git checkout pytorch_coupling
+        git config --global --add safe.directory /home/firedrake/firedrake/src/pyadjoint
         cd /home/firedrake/firedrake/src/pyadjoint
         git checkout adjoint-1-forms
     - name: Install torch
