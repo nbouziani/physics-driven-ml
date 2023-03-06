@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: firedrakeproject/firedrake-vanilla:latest
+      options: --user root
     steps:
     # Firedrake's Dockerfile sets USER to firedrake instead of using the default user, so we need to update file permissions for this image to work on GH Actions.
     # See https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners#docker-container-filesystem
