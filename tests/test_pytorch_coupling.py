@@ -8,6 +8,7 @@ from firedrake.external_operators.neural_networks.backends import get_backend
 from pyadjoint.tape import get_working_tape, pause_annotation
 
 from models.autoencoder import EncoderDecoder
+from training.utils import ModelConfig
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +57,7 @@ def poisson_residual(u, f, V):
 
 # Set of Firedrake operations that will be composed with PyTorch operations
 def solve_poisson(f, V):
-    """Solve Poisson problem"""
+    """Solve Poisson problem with homogeneous Dirichlet boundary conditions"""
     u = Function(V)
     v = TestFunction(V)
     F = (inner(grad(u), grad(v)) + inner(u, v) - inner(f, v)) * dx
@@ -78,10 +79,11 @@ def firedrake_operator(request, f_exact, V):
 
 @pytest.mark.skipcomplex  # Taping for complex-valued 0-forms not yet done
 def test_pytorch_loss_backward(V, f_exact):
-    """Add doc """
+    """Test backpropagation through a vector-valued Firedrake operator"""
 
     # Instantiate model
-    model = EncoderDecoder(V.dim())
+    config = ModelConfig(input_shape=V.dim())
+    model = EncoderDecoder(config)
 
     # Set double precision
     model.double()
@@ -92,27 +94,24 @@ def test_pytorch_loss_backward(V, f_exact):
     # Get machine learning backend (default: PyTorch)
     pytorch_backend = get_backend()
 
-    # Model input
-    f = Function(V)
-
-    # Convert f to torch.Tensor
-    f_P = pytorch_backend.to_ml_backend(f)
+    # Convert f_exact to torch.Tensor
+    f_P = pytorch_backend.to_ml_backend(f_exact)
 
     # Forward pass
-    y_P = model(f_P)
+    u_P = model(f_P)
 
     # Set control
-    u_F = Function(V)
-    c = Control(u_F)
+    u = Function(V)
+    c = Control(u)
 
     # Set reduced functional which expresses the Firedrake operations in terms of the control
-    Jhat = ReducedFunctional(poisson_residual(u_F, f_exact, V), c)
+    Jhat = ReducedFunctional(poisson_residual(u, f_exact, V), c)
 
     # Construct the torch_operator that takes a callable representing the Firedrake operations
     G = torch_operator(Jhat)
 
     # Compute Poisson residual in Firedrake using torch_operator: `residual_P` is a torch.Tensor
-    residual_P = G(y_P)
+    residual_P = G(u_P)
 
     # Compute PyTorch loss
     loss = (residual_P ** 2).sum()
@@ -126,19 +125,20 @@ def test_pytorch_loss_backward(V, f_exact):
     assert all([θi.grad is not None for θi in model.parameters()])
 
     # -- Check forward operator -- #
-    y_F = pytorch_backend.from_ml_backend(y_P, V)
-    residual_F = poisson_residual(y_F, f_exact, V)
-    residual_P_exact = pytorch_backend.to_ml_backend(residual_F)
+    u = pytorch_backend.from_ml_backend(u_P, V)
+    residual = poisson_residual(u, f_exact, V)
+    residual_P_exact = pytorch_backend.to_ml_backend(residual)
 
     assert (residual_P - residual_P_exact).detach().norm() < 1e-10
 
 
 @pytest.mark.skipcomplex  # Taping for complex-valued 0-forms not yet done
-def test_firedrake_loss_backward(V, f_exact):
-    """Add doc """
+def test_firedrake_loss_backward(V):
+    """Test backpropagation through a scalar-valued Firedrake operator"""
 
     # Instantiate model
-    model = EncoderDecoder(V.dim())
+    config = ModelConfig(input_shape=V.dim())
+    model = EncoderDecoder(config)
 
     # Set double precision
     model.double()
@@ -181,15 +181,16 @@ def test_firedrake_loss_backward(V, f_exact):
     assert all([θi.grad is not None for θi in model.parameters()])
 
     # -- Check forward operator -- #
-    f_F = pytorch_backend.from_ml_backend(f_P, V)
-    loss_F = solve_poisson(f_F, V)
-    loss_P_exact = pytorch_backend.to_ml_backend(loss_F)
+    f = pytorch_backend.from_ml_backend(f_P, V)
+    loss = solve_poisson(f, V)
+    loss_P_exact = pytorch_backend.to_ml_backend(loss)
 
     assert (loss_P - loss_P_exact).detach().norm() < 1e-10
 
 
 @pytest.mark.skipcomplex  # Taping for complex-valued 0-forms not yet done
 def test_taylor_torch_operator(firedrake_operator, V):
+    """Taylor test for the torch operator"""
     # Control value
     ω = Function(V)
     # Get Firedrake operator and other operator arguments

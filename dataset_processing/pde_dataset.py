@@ -10,7 +10,7 @@ from dataset_processing.data_types import BatchElement, BatchedElement
 
 
 class PDEDataset(Dataset):
-    def __init__(self, dataset: str = "poisson", dataset_split: str = "train", data_dir: str = ""):
+    def __init__(self, dataset: str = "heat_conductivity", dataset_split: str = "train", data_dir: str = ""):
         """
         Dataset reader for PDE-based datasets generated using Firedrake.
         """

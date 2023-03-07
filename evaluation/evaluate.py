@@ -11,7 +11,7 @@ from tqdm.auto import tqdm
 
 from models.autoencoder import EncoderDecoder
 from models.cnn import CNN
-from training.utils import TrainingConfig, get_logger
+from training.utils import ModelConfig, get_logger
 from dataset_processing.pde_dataset import PDEDataset, BatchedElement
 
 
@@ -61,13 +61,13 @@ if __name__ == "__main__":
     parser.add_argument("--model_version", default="", type=str, help="Saved model version to load (e.g. for a specific checkpoint)")
     parser.add_argument("--max_eval_steps", default=5000, type=int, help="Maximum number of evaluation steps")
     parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl, avg_rel]")
-    parser.add_argument("--dataset", default="poisson", type=str, help="Dataset name")
+    parser.add_argument("--dataset", default="heat_conductivity", type=str, help="Dataset name")
     parser.add_argument("--batch_size", default=1, type=int, help="Batch size")
     parser.add_argument("--device", default="cpu", type=str, help="Device identifier (e.g. 'cuda:0' or 'cpu')")
     parser.add_argument("--eval_set", default="test", type=str, help="Dataset split to evaluate on")
 
     args = parser.parse_args()
-    config = TrainingConfig(**dict(args._get_kwargs()))
+    config = ModelConfig(**dict(args._get_kwargs()))
 
     # Load dataset
     data_dir = os.path.join(args.resources_dir, "datasets", args.dataset)

@@ -5,34 +5,25 @@ from dataclasses import dataclass
 
 
 @dataclass
-class TrainingConfig:
+class ModelConfig:
 
-    # Resource directory
+    # Directories
     resources_dir: str = ""
-    data_dir: str = ""
     model_dir: str = ""
     model_version: str = ""
 
-    # Model
+    # Model architecture
     model: str = "encoder-decoder"
     input_shape: int = 1
+    dropout: float = 0.0
     device: str = "cpu"
 
-    # Domain
-    Lx: float = 1.0
-    Ly: float = 1.0
-
-    # Test case
-    conductivity: str = "circle"
-    scale_noise: float = 5e-3
-
     # Evaluation
+    eval_set: str = ""
     max_eval_steps: int = 5000
 
     # Dataset
-    dataset: str = "poisson"
-    ntrain: int = 30
-    eval_set: str = "test"
+    dataset: str = "heat_conductivity"
 
     # Optimisation
     alpha: float = 1e-3
@@ -41,13 +32,9 @@ class TrainingConfig:
     learning_rate: float = 1e-3
     evaluation_metric: str = "L2"
 
-    # Utils
-    visualise: bool = False
-
     def __post_init__(self):
 
         assert self.model in {"encoder-decoder", "cnn"}
-        assert self.conductivity in {"circle", "random"}
 
         if self.batch_size != 1:
             # This can easily be implemented by using Firedrake ensemble parallelism.

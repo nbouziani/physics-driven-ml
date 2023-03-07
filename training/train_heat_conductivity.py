@@ -16,7 +16,7 @@ from firedrake_adjoint import *
 from dataset_processing.pde_dataset import PDEDataset, BatchedElement
 from models.autoencoder import EncoderDecoder
 from models.cnn import CNN
-from training.utils import TrainingConfig, get_logger
+from training.utils import ModelConfig, get_logger
 from evaluation.evaluate import evaluate
 
 
@@ -31,14 +31,15 @@ parser.add_argument("--alpha", default=1e4, type=float, help="Regularisation par
 parser.add_argument("--epochs", default=50, type=int, help="Epochs")
 parser.add_argument("--batch_size", default=1, type=int, help="Batch size")
 parser.add_argument("--learning_rate", default=5e-5, type=float, help="Learning rate")
+parser.add_argument("--dropout", default=0.1, type=float, help="Dropout rate")
 parser.add_argument("--evaluation_metric", default="L2", type=str, help="Evaluation metric: one of [Lp, H1, Hdiv, Hcurl, , avg_rel]")
 parser.add_argument("--max_eval_steps", default=5000, type=int, help="Maximum number of evaluation steps")
-parser.add_argument("--dataset", default="poisson", type=str, help="Dataset name: one of [poisson]")
+parser.add_argument("--dataset", default="heat_conductivity", type=str, help="Dataset name")
 parser.add_argument("--model_dir", default="model", type=str, help="Directory name to save trained models")
 parser.add_argument("--device", default="cpu", type=str, help="Device identifier (e.g. 'cuda:0' or 'cpu')")
 
 args = parser.parse_args()
-config = TrainingConfig(**dict(args._get_kwargs()))
+config = ModelConfig(**dict(args._get_kwargs()))
 
 # Load train dataset
 train_dataset = PDEDataset(dataset=config.dataset, dataset_split="train", data_dir=config.resources_dir)
@@ -61,7 +62,7 @@ bcs = [DirichletBC(V, Constant(0.0), "on_boundary")]
 
 
 # Define the Firedrake operations to be composed with PyTorch
-def solve_poisson(κ, u_obs, f, V, bcs):
+def solve_pde(κ, u_obs, f, V, bcs):
     """Solve Poisson problem"""
     u = Function(V)
     v = TestFunction(V)
@@ -77,20 +78,20 @@ def assemble_L2_error(x, x_exact):
     return assemble(0.5 * (x - x_exact) ** 2 * dx)
 
 
-solve_poisson = functools.partial(solve_poisson, f=f, V=V, bcs=bcs)
+solve_pde = functools.partial(solve_pde, f=f, V=V, bcs=bcs)
 
 # Get PyTorch backend from Firedrake (for mapping from Firedrake to PyTorch and vice versa)
 fd_backend = fd.get_backend()
 
 # Instantiate model
+config.add_input_shape(V.dim())
 if config.model == "encoder-decoder":
-    n = V.dim()
-    model = EncoderDecoder(n)
-    config.add_input_shape(n)
+    model = EncoderDecoder(config)
 elif config.model == "cnn":
-    n = V.dim()
-    model = CNN(V.dim())
-    config.add_input_shape(n)
+    model = CNN(config)
+else:
+    raise ValueError(f"Unknown model: {config.model}")
+
 # Set double precision (default Firedrake type)
 model.double()
 # Move model to device
@@ -111,7 +112,7 @@ tape = get_working_tape()
 # Set tape locally to only record the operations relevant to G on the computational graph
 with set_working_tape() as tape:
     # Define PyTorch operator for solving the PDE and compute the L2 error (for computing κ -> 0.5 * ||u(κ) - u_obs||^{2}_{L2})
-    F = ReducedFunctional(solve_poisson(κ, u_obs), [Control(κ), Control(u_obs)])
+    F = ReducedFunctional(solve_pde(κ, u_obs), [Control(κ), Control(u_obs)])
     G = fd.torch_operator(F)
 
 # Set tape locally to only record the operations relevant to H on the computational graph
@@ -164,9 +165,6 @@ for epoch_num in trange(config.epochs, disable=True):
     # Evaluation on the test random field
     error = evaluate(model, config, test_dataloader, disable_tqdm=True)
     logger.info(f"Error ({config.evaluation_metric}): {error}")
-
-    # error_train, *_ = evaluate(model, config, train_data[:50], disable_tqdm=True)
-    # logger.info(f"Debug Error ({config.evaluation_metric}): {error_train}")
 
     # Save best-performing model
     if error < best_error or epoch_num == 0:
