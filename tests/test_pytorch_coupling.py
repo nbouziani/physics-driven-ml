@@ -201,4 +201,4 @@ def test_taylor_torch_operator(firedrake_operator, V):
     # `gradcheck` is likey to fail if the inputs are not double precision (cf. https://pytorch.org/docs/stable/generated/torch.autograd.gradcheck.html)
     x_P = torch.rand(V.dim(), dtype=torch.double, requires_grad=True)
     # Taylor test (`eps` is the perturbation)
-    torch.autograd.gradcheck(G, x_P, eps=1e-6)
+    assert torch.autograd.gradcheck(G, x_P, eps=1e-6)
