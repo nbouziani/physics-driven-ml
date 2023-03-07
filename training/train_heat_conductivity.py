@@ -4,7 +4,6 @@ import functools
 
 import torch
 import torch.optim as optim
-import firedrake as fd
 
 from tqdm.auto import tqdm, trange
 
@@ -81,7 +80,7 @@ def assemble_L2_error(x, x_exact):
 solve_pde = functools.partial(solve_pde, f=f, V=V, bcs=bcs)
 
 # Get PyTorch backend from Firedrake (for mapping from Firedrake to PyTorch and vice versa)
-fd_backend = fd.get_backend()
+fd_backend = get_backend()
 
 # Instantiate model
 config.add_input_shape(V.dim())
@@ -94,6 +93,7 @@ else:
 
 # Set double precision (default Firedrake type)
 model.double()
+
 # Move model to device
 model.to(config.device)
 
@@ -113,13 +113,13 @@ tape = get_working_tape()
 with set_working_tape() as tape:
     # Define PyTorch operator for solving the PDE and compute the L2 error (for computing κ -> 0.5 * ||u(κ) - u_obs||^{2}_{L2})
     F = ReducedFunctional(solve_pde(κ, u_obs), [Control(κ), Control(u_obs)])
-    G = fd.torch_operator(F)
+    G = torch_operator(F)
 
 # Set tape locally to only record the operations relevant to H on the computational graph
 with set_working_tape() as tape:
     # Define PyTorch operator for computing the L2-loss (for computing κ -> 0.5 * ||κ - κ_exact||^{2}_{L2})
     F = ReducedFunctional(assemble_L2_error(κ, κ_exact), [Control(κ), Control(κ_exact)])
-    H = fd.torch_operator(F)
+    H = torch_operator(F)
 
 # Training loop
 for epoch_num in trange(config.epochs, disable=True):

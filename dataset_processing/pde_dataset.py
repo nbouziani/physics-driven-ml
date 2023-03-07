@@ -10,26 +10,27 @@ from dataset_processing.data_types import BatchElement, BatchedElement
 
 
 class PDEDataset(Dataset):
+    """Dataset reader for PDE-based datasets generated using Firedrake."""
+
     def __init__(self, dataset: str = "heat_conductivity", dataset_split: str = "train", data_dir: str = ""):
-        """
-        Dataset reader for PDE-based datasets generated using Firedrake.
-        """
+        # Check dataset directory
         dataset_dir = os.path.join(data_dir, "datasets", dataset)
         if not os.path.exists(dataset_dir):
             raise ValueError(f"Dataset directory {os.path.abspath(dataset_dir)} does not exist")
 
+        # Get mesh and batch elements (Firedrake functions)
         name_file = dataset_split + "_data.h5"
         mesh, batch_elements = self.load_dataset(os.path.join(dataset_dir, name_file))
         self.mesh = mesh
-        # Batch elements (Firedrake functions)
         self.batch_elements_fd = batch_elements
+
+        # Get PyTorch backend from Firedrake (for mapping from Firedrake to PyTorch and vice versa)
         self._fd_backend = get_backend()
 
     def load_dataset(self, fname: str):
         data = []
         # Load data
         with CheckpointFile(fname, "r") as afile:
-            # Note: There should be a way to get this from the checkpoint file directly.
             n = int(np.array(afile.h5pyfile["n"]))
             # Load mesh
             mesh = afile.load_mesh("mesh")

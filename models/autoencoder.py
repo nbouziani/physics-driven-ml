@@ -2,6 +2,7 @@ import os
 import torch
 import torch.nn.functional as F
 
+from torch import Tensor
 from torch.nn import Module, Flatten, Linear
 from training.utils import ModelConfig
 
@@ -17,13 +18,13 @@ class EncoderDecoder(Module):
         self.linear_encoder = Linear(self.n, self.m)
         self.linear_decoder = Linear(self.m, self.n)
 
-    def encode(self, x):
+    def encode(self, x: Tensor):
         return F.relu(self.linear_encoder(x))
 
-    def decode(self, x):
+    def decode(self, x: Tensor):
         return F.relu(self.linear_decoder(x))
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         # [batch_size, n]
         x = self.flatten(x)
         # [batch_size, m]

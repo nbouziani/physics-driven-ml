@@ -21,6 +21,7 @@ fd_backend = fd.get_backend()
 
 
 def evaluate(model, config, dataloader, disable_tqdm=False):
+    """Evaluate the model on a given dataset."""
 
     model.eval()
 
@@ -47,6 +48,7 @@ def evaluate(model, config, dataloader, disable_tqdm=False):
 
 
 def eval_error(x, x_exact, evaluation_metric):
+    """Compute the error between x and x_exact for a given metric."""
     if evaluation_metric == "avg_rel":
         # Compute relative L2-error: ||x - x_exact||_{L2}^{2} / ||x_exact||_{L2}^{2}
         return fd.assemble((x - x_exact) ** 2 * fd.dx)/fd.assemble(x_exact ** 2 * fd.dx)
@@ -88,5 +90,6 @@ if __name__ == "__main__":
     # Move model to device
     model.to(config.device)
 
+    # Evaluate model
     error, k_learned = evaluate(model, config, dataloader)
     logger.info(f"\n\t Error (metric: {config.evaluation_metric}): {error:.4e}")

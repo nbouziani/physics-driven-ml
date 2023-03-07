@@ -1,8 +1,10 @@
 import os
 import torch
 import torch.nn.functional as F
-from training.utils import ModelConfig
+
+from torch import Tensor
 from torch.nn import Module, Sequential, Linear, ReLU, Tanh, MaxPool2d, Conv2d, ConvTranspose2d, BatchNorm2d, Dropout
+from training.utils import ModelConfig
 
 
 class CNN(Module):
@@ -40,7 +42,7 @@ class CNN(Module):
                                       ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1),
                                       Tanh())
 
-    def forward(self, x):
+    def forward(self, x: Tensor):
         # x: [batch_size, dim]
         # Reduce dimensionality to form a grid: x -> [batch_size, :, n, n]
         xh = F.relu(self.linear_encoder(x))

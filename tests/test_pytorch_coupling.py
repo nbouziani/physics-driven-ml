@@ -31,12 +31,12 @@ def handle_annotation():
         pause_annotation()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def mesh():
     return UnitSquareMesh(10, 10)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def V(mesh):
     return FunctionSpace(mesh, "CG", 1)
 
@@ -68,12 +68,12 @@ def solve_poisson(f, V):
     return assemble(u ** 2 * dx)
 
 
-@pytest.fixture(params=['poisson_residual', 'solve_poisson'])
+@pytest.fixture(params=["poisson_residual", "solve_poisson"])
 def firedrake_operator(request, f_exact, V):
     # Return firedrake operator and the corresponding non-control arguments
-    if request.param == 'poisson_residual':
+    if request.param == "poisson_residual":
         return poisson_residual, (f_exact, V)
-    elif request.param == 'solve_poisson':
+    elif request.param == "solve_poisson":
         return solve_poisson, (V,)
 
 

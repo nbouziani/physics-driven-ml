@@ -15,7 +15,8 @@ logger = get_logger()
 comm = MPI.COMM_WORLD
 
 
-def random_field(V, N=1, m=5, σ=0.6, tqdm=False, seed=2023):
+def random_field(V, N: int = 1, m: int = 5, σ: float = 0.6,
+                 tqdm: bool = False, seed: int = 2023):
     """Generate N 2D random fields with m modes."""
     rng = default_rng(seed)
     x, y = SpatialCoordinate(V.ufl_domain())
@@ -31,14 +32,15 @@ def random_field(V, N=1, m=5, σ=0.6, tqdm=False, seed=2023):
     return fields
 
 
-def generate_data(V, data_dir, ntrain=50, ntest=1, forward="heat", noise="normal", scale_noise=1., seed=1234):
+def generate_data(V, data_dir: str, ntrain: int = 50, ntest: int = 10,
+                  forward: str = "heat", noise: str = "normal",
+                  scale_noise: float = 1., seed: int = 1234):
     """Generate train/test data for a given PDE and noise distribution."""
 
     logger.info("\n Generate random fields")
     ks = random_field(V, N=ntrain+ntest, tqdm=True, seed=seed)
 
     logger.info("\n Generate corresponding PDE solutions")
-
     if forward == "heat":
         us = []
         v = TestFunction(V)
@@ -54,22 +56,21 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward="heat", noise="normal
     elif callable(forward):
         us = forward(ks, V)
     else:
-        raise NotImplementedError('Forward problem not implemented. Use "heat" or provide a callable for your forward problem.')
+        raise NotImplementedError("Forward problem not implemented. Use 'heat' or provide a callable for your forward problem.")
 
-    logger.info("\n Form noisy observations of PDE solutions")
-
-    # Add noise to PDE solutions
-    if noise == 'normal':
+    logger.info("\n Form noisy observations from PDE solutions")
+    if noise == "normal":
         us_obs = []
         for u in tqdm(us):
             u_obs = Function(V).assign(u)
             noise = scale_noise * np.random.rand(V.dim())
+            # Add noise to PDE solutions
             u_obs.dat.data[:] += noise
             us_obs.append(u_obs)
     elif callable(noise):
         us_obs = noise(us)
     else:
-        raise NotImplementedError('Noise distribution not implemented. Use "normal" or provide a callable for your noise distribution.')
+        raise NotImplementedError("Noise distribution not implemented. Use 'normal' or provide a callable for your noise distribution.")
 
     logger.info(f"\n Generated {ntrain} training samples and {ntest} test sample.")
 
@@ -81,7 +82,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward="heat", noise="normal
     logger.info(f"\n Saving train/test data to {os.path.abspath(data_dir)}.")
 
     # Save train data
-    with CheckpointFile(os.path.join(data_dir, "train_data.h5"), 'w') as afile:
+    with CheckpointFile(os.path.join(data_dir, "train_data.h5"), "w") as afile:
         afile.h5pyfile["n"] = ntrain
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_train, us_train, us_obs_train)):
@@ -89,7 +90,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward="heat", noise="normal
             afile.save_function(u_obs, idx=i, name="u_obs")
 
     # Save test data
-    with CheckpointFile(os.path.join(data_dir, "test_data.h5"), 'w') as afile:
+    with CheckpointFile(os.path.join(data_dir, "test_data.h5"), "w") as afile:
         afile.h5pyfile["n"] = ntest
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_test, us_test, us_obs_test)):
@@ -100,7 +101,7 @@ def generate_data(V, data_dir, ntrain=50, ntest=1, forward="heat", noise="normal
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--ntrain", default=50, type=int, help="Number of training samples")
-    parser.add_argument("--ntest", default=1, type=int, help="Number of testing samples")
+    parser.add_argument("--ntest", default=10, type=int, help="Number of testing samples")
     parser.add_argument("--forward", default="heat", type=str, help="Forward problem (e.g. 'heat')")
     parser.add_argument("--noise", default="normal", type=str, help="Noise distribution (e.g. 'normal')")
     parser.add_argument("--scale_noise", default=5e-3, type=float, help="Noise scaling")
