@@ -38,7 +38,7 @@ jobs:
       shell: bash -l {0}
       run: |
         source /home/firedrake/firedrake/bin/activate
-        python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu
+        python -m pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
     - name: Install dependencies
       shell: bash -l {0}
       run: |
