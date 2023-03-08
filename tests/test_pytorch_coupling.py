@@ -4,7 +4,6 @@ import torch
 
 from firedrake import *
 from firedrake_adjoint import *
-from firedrake.external_operators.neural_networks.backends import get_backend
 from pyadjoint.tape import get_working_tape, pause_annotation
 
 from models.autoencoder import EncoderDecoder
@@ -107,10 +106,10 @@ def test_pytorch_loss_backward(V, f_exact):
     # Set reduced functional which expresses the Firedrake operations in terms of the control
     Jhat = ReducedFunctional(poisson_residual(u, f_exact, V), c)
 
-    # Construct the torch_operator that takes a callable representing the Firedrake operations
+    # Construct the torch operator that takes a callable representing the Firedrake operations
     G = torch_operator(Jhat)
 
-    # Compute Poisson residual in Firedrake using torch_operator: `residual_P` is a torch.Tensor
+    # Compute Poisson residual in Firedrake using the torch operator: `residual_P` is a torch.Tensor
     residual_P = G(u_P)
 
     # Compute PyTorch loss
@@ -165,7 +164,7 @@ def test_firedrake_loss_backward(V):
     # Set reduced functional which expresses the Firedrake operations in terms of the control
     Jhat = ReducedFunctional(solve_poisson(f, V), c)
 
-    # Construct the torch_operator that takes a callable representing the Firedrake operations
+    # Construct the torch operator that takes a callable representing the Firedrake operations
     G = torch_operator(Jhat)
 
     # Solve Poisson problem and compute the loss defined as the L2-norm of the solution
