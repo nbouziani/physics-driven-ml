@@ -1,6 +1,6 @@
 # Physics-driven machine learning models
 
-Examples of physics-driven machine learning models using PyTorch and Firedrake
+Developing and running physics-driven machine learning models in a highly productive way using PyTorch and Firedrake
 
 
 ## Table of Contents
@@ -16,16 +16,11 @@ This work relies on the Firedrake finite element system, which needs to be insta
 
 ### Installing Firedrake
 
-Firedrake is installed via its installation script, which you can download by running:
+Firedrake is installed via its installation script, which you can download and run via:
 
-```download_install_script
+```install_firedrake
   curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
-```
-
-Then, you can install Firedrake and specify the required branches using:
-
-```install_firedrake_pytorch_branches
-python3 firedrake-install --package-branch firedrake pytorch_coupling --package-branch pyadjoint adjoint-1-forms
+  python3 firedrake-install --package-branch firedrake pytorch_coupling
 ```
 
 Finally, you will need to activate the Firedrake virtual environment:
