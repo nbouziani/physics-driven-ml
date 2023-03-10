@@ -17,7 +17,7 @@ from dataset_processing.pde_dataset import PDEDataset, BatchedElement
 
 logger = get_logger("Evaluation")
 
-fd_backend = fd.get_backend()
+fd_backend = fd.load_backend()
 
 
 def evaluate(model, config, dataloader, disable_tqdm=False):

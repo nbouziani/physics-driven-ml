@@ -91,7 +91,7 @@ def test_pytorch_loss_backward(V, f_exact):
     assert all([θi.grad is None for θi in model.parameters()])
 
     # Get machine learning backend (default: PyTorch)
-    pytorch_backend = get_backend()
+    pytorch_backend = load_backend()
 
     # Convert f_exact to torch.Tensor
     f_P = pytorch_backend.to_ml_backend(f_exact)
@@ -146,7 +146,7 @@ def test_firedrake_loss_backward(V):
     assert all([θi.grad is None for θi in model.parameters()])
 
     # Get machine learning backend (default: PyTorch)
-    pytorch_backend = get_backend()
+    pytorch_backend = load_backend()
 
     # Model input
     λ = Function(V)
@@ -198,7 +198,7 @@ def test_taylor_torch_operator(firedrake_operator, V):
     Jhat = ReducedFunctional(fd_op(ω, *args), Control(ω))
     # Define the torch operator
     G = torch_operator(Jhat)
-    # `gradcheck` is likey to fail if the inputs are not double precision (cf. https://pytorch.org/docs/stable/generated/torch.autograd.gradcheck.html)
+    # `gradcheck` is likely to fail if the inputs are not double precision (cf. https://pytorch.org/docs/stable/generated/torch.autograd.gradcheck.html)
     x_P = torch.rand(V.dim(), dtype=torch.double, requires_grad=True)
     # Taylor test (`eps` is the perturbation)
     assert torch.autograd.gradcheck(G, x_P, eps=1e-6)

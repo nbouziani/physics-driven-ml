@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from typing import List
-from firedrake import CheckpointFile, get_backend
+from firedrake import CheckpointFile, load_backend
 from torch.utils.data import Dataset
 
 from dataset_processing.data_types import BatchElement, BatchedElement
@@ -25,7 +25,7 @@ class PDEDataset(Dataset):
         self.batch_elements_fd = batch_elements
 
         # Get PyTorch backend from Firedrake (for mapping from Firedrake to PyTorch and vice versa)
-        self._fd_backend = get_backend()
+        self._fd_backend = load_backend()
 
     def load_dataset(self, fname: str):
         data = []
