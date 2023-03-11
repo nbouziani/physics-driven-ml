@@ -57,7 +57,25 @@ python generate_data.py --forward heat --ntrain 500 --ntest 50 --dataset_name he
 
 You can specify your own forward problem and custom noise by providing the corresponding callables in `./dataset_processing/generate_data.py`.
 
-- Heat conductivity paper dataset
+The dataset used in the paper for the heat conductivity paper dataset can be found in `./data/datasets/heat_conductivity_paper`. Here are some samples from the test set:
+
+$$\kappa$$
+<p align="center">
+  <img src="./data/figures/kappa/kappa_1.png" width="230" />
+  <img src="./data/figures/kappa/kappa_2.png" width="230" />
+  <img src="./data/figures/kappa/kappa_3.png" width="230" />
+  <img src="./data/figures/kappa/kappa_4.png" width="230" />
+</p>
+
+$$u^{obs}$$
+<p align="center">
+  <img src="./data/figures/u_obs/u_obs_1.png" width="230" />
+  <img src="./data/figures/u_obs/u_obs_2.png" width="230" />
+  <img src="./data/figures/u_obs/u_obs_3.png" width="230" />
+  <img src="./data/figures/u_obs/u_obs_4.png" width="230" />
+</p>
+
+
 
 ## Training
 
