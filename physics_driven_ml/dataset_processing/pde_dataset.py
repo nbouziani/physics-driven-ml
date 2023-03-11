@@ -6,7 +6,7 @@ from typing import List
 from firedrake import CheckpointFile, load_backend
 from torch.utils.data import Dataset
 
-from dataset_processing.data_types import BatchElement, BatchedElement
+from physics_driven_ml.dataset_processing import BatchElement, BatchedElement
 
 
 class PDEDataset(Dataset):

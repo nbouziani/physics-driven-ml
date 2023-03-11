@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from torch import Tensor
 from torch.nn import Module, Sequential, Linear, ReLU, Tanh, MaxPool2d, Conv2d, ConvTranspose2d, BatchNorm2d, Dropout
-from training.utils import ModelConfig
+from physics_driven_ml.utils import ModelConfig
 
 
 class CNN(Module):

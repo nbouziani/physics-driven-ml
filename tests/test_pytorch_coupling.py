@@ -6,8 +6,11 @@ from firedrake import *
 from firedrake_adjoint import *
 from pyadjoint.tape import get_working_tape, pause_annotation
 
-from models.autoencoder import EncoderDecoder
-from training.utils import ModelConfig
+from physics_driven_ml.models import EncoderDecoder
+from physics_driven_ml.utils import ModelConfig
+
+
+pytorch_backend = load_backend("pytorch")
 
 
 @pytest.fixture(autouse=True)
@@ -90,9 +93,6 @@ def test_pytorch_loss_backward(V, f_exact):
     # Check that gradients are initially set to None
     assert all([θi.grad is None for θi in model.parameters()])
 
-    # Get machine learning backend (default: PyTorch)
-    pytorch_backend = load_backend()
-
     # Convert f_exact to torch.Tensor
     f_P = pytorch_backend.to_ml_backend(f_exact)
 
@@ -144,9 +144,6 @@ def test_firedrake_loss_backward(V):
 
     # Check that gradients are initially set to None
     assert all([θi.grad is None for θi in model.parameters()])
-
-    # Get machine learning backend (default: PyTorch)
-    pytorch_backend = load_backend()
 
     # Model input
     λ = Function(V)

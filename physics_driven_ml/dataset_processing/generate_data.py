@@ -6,7 +6,7 @@ from numpy.random import default_rng
 
 from firedrake import *
 
-from training.utils import get_logger
+from physics_driven_ml.utils import get_logger
 
 
 logger = get_logger("Data generation")

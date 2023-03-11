@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from torch import Tensor
 from torch.nn import Module, Flatten, Linear
-from training.utils import ModelConfig
+from physics_driven_ml.utils import ModelConfig
 
 
 class EncoderDecoder(Module):

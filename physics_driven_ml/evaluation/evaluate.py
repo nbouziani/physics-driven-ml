@@ -9,10 +9,9 @@ from torch.utils.data import DataLoader
 from functools import partial
 from tqdm.auto import tqdm
 
-from models.autoencoder import EncoderDecoder
-from models.cnn import CNN
-from training.utils import ModelConfig, get_logger
-from dataset_processing.pde_dataset import PDEDataset, BatchedElement
+from physics_driven_ml.models import EncoderDecoder, CNN
+from physics_driven_ml.utils import ModelConfig, get_logger
+from physics_driven_ml.dataset_processing import PDEDataset, BatchedElement
 
 
 logger = get_logger("Evaluation")
