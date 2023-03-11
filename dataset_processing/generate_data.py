@@ -1,18 +1,15 @@
 import os
 import argparse
 import numpy as np
-from mpi4py import MPI
 from tqdm.auto import tqdm, trange
 from numpy.random import default_rng
 
-from training.utils import get_logger
-
 from firedrake import *
 
+from training.utils import get_logger
 
-logger = get_logger()
 
-comm = MPI.COMM_WORLD
+logger = get_logger("Data generation")
 
 
 def random_field(V, N: int = 1, m: int = 5, σ: float = 0.6,
@@ -38,9 +35,11 @@ def generate_data(V, data_dir: str, ntrain: int = 50, ntest: int = 10,
     """Generate train/test data for a given PDE and noise distribution."""
 
     logger.info("\n Generate random fields")
+
     ks = random_field(V, N=ntrain+ntest, tqdm=True, seed=seed)
 
     logger.info("\n Generate corresponding PDE solutions")
+
     if forward == "heat":
         us = []
         v = TestFunction(V)
@@ -59,6 +58,7 @@ def generate_data(V, data_dir: str, ntrain: int = 50, ntest: int = 10,
         raise NotImplementedError("Forward problem not implemented. Use 'heat' or provide a callable for your forward problem.")
 
     logger.info("\n Form noisy observations from PDE solutions")
+
     if noise == "normal":
         us_obs = []
         for u in tqdm(us):
@@ -72,7 +72,7 @@ def generate_data(V, data_dir: str, ntrain: int = 50, ntest: int = 10,
     else:
         raise NotImplementedError("Noise distribution not implemented. Use 'normal' or provide a callable for your noise distribution.")
 
-    logger.info(f"\n Generated {ntrain} training samples and {ntest} test sample.")
+    logger.info(f"\n Generated {ntrain} training samples and {ntest} test samples.")
 
     # Split into train/test
     ks_train, ks_test = ks[:ntrain], ks[ntrain:]
