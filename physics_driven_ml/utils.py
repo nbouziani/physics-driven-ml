@@ -8,7 +8,7 @@ from dataclasses import dataclass
 class ModelConfig:
 
     # Directories
-    resources_dir: str = ""
+    data_dir: str = ""
     model_dir: str = ""
     model_version: str = ""
 

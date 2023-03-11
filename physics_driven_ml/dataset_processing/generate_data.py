@@ -29,7 +29,7 @@ def random_field(V, N: int = 1, m: int = 5, σ: float = 0.6,
     return fields
 
 
-def generate_data(V, data_dir: str, ntrain: int = 50, ntest: int = 10,
+def generate_data(V, dataset_dir: str, ntrain: int = 50, ntest: int = 10,
                   forward: str = "heat", noise: str = "normal",
                   scale_noise: float = 1., seed: int = 1234):
     """Generate train/test data for a given PDE and noise distribution."""
@@ -79,10 +79,10 @@ def generate_data(V, data_dir: str, ntrain: int = 50, ntest: int = 10,
     us_train, us_test = us[:ntrain], us[ntrain:]
     us_obs_train, us_obs_test = us_obs[:ntrain], us_obs[ntrain:]
 
-    logger.info(f"\n Saving train/test data to {os.path.abspath(data_dir)}.")
+    logger.info(f"\n Saving train/test data to {os.path.abspath(dataset_dir)}.")
 
     # Save train data
-    with CheckpointFile(os.path.join(data_dir, "train_data.h5"), "w") as afile:
+    with CheckpointFile(os.path.join(dataset_dir, "train_data.h5"), "w") as afile:
         afile.h5pyfile["n"] = ntrain
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_train, us_train, us_obs_train)):
@@ -90,7 +90,7 @@ def generate_data(V, data_dir: str, ntrain: int = 50, ntest: int = 10,
             afile.save_function(u_obs, idx=i, name="u_obs")
 
     # Save test data
-    with CheckpointFile(os.path.join(data_dir, "test_data.h5"), "w") as afile:
+    with CheckpointFile(os.path.join(dataset_dir, "test_data.h5"), "w") as afile:
         afile.h5pyfile["n"] = ntest
         afile.save_mesh(mesh)
         for i, (k, u, u_obs) in enumerate(zip(ks_test, us_test, us_obs_test)):
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--Lx", default=1., type=float, help="Length of the domain")
     parser.add_argument("--Ly", default=1., type=float, help="Width of the domain")
     parser.add_argument("--degree", default=1, type=int, help="Degree of the finite element CG space")
-    parser.add_argument("--resources_dir", default="../data", type=str, help="Resources directory")
+    parser.add_argument("--data_dir", default=os.environ["DATA_DIR"], type=str, help="Data directory")
     parser.add_argument("--dataset_name", default="heat_conductivity", type=str, help="Dataset name")
 
     args = parser.parse_args()
@@ -119,14 +119,14 @@ if __name__ == "__main__":
     mesh = RectangleMesh(args.nx, args.ny, args.Lx, args.Ly, name="mesh")
     V = FunctionSpace(mesh, "CG", args.degree)
     # Set up data directory
-    data_dir = os.path.join(args.resources_dir, "datasets", args.dataset_name)
+    dataset_dir = os.path.join(args.data_dir, "datasets", args.dataset_name)
     # Make data directory while dealing with parallelism
     try:
-        os.makedirs(data_dir)
+        os.makedirs(dataset_dir)
     except FileExistsError:
         # Another process created the directory
         pass
     # Generate data
-    generate_data(V, data_dir=data_dir, ntrain=args.ntrain,
+    generate_data(V, dataset_dir=dataset_dir, ntrain=args.ntrain,
                   ntest=args.ntest, forward=args.forward,
                   noise=args.noise, scale_noise=args.scale_noise)

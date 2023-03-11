@@ -32,12 +32,12 @@ def evaluate(model, config, dataloader, disable_tqdm=False):
         # Move batch to device
         batch = BatchedElement(*[x.to(config.device, non_blocking=True) if isinstance(x, torch.Tensor) else x for x in batch])
         u_obs = batch.u_obs
-        κ_exact, = batch.target_fd
+        k_exact, = batch.target_fd
 
         with torch.no_grad():
-            κP = model(u_obs)
-            κF = fd_backend.from_ml_backend(κP, κ_exact.function_space())
-            total_error += compute_error(κF, κ_exact)
+            kP = model(u_obs)
+            kF = fd_backend.from_ml_backend(kP, k_exact.function_space())
+            total_error += compute_error(kF, k_exact)
 
         if step_num == eval_steps - 1:
             break
@@ -56,7 +56,7 @@ def eval_error(x, x_exact, evaluation_metric):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--resources_dir", default="../data", type=str, help="Resources directory")
+    parser.add_argument("--data_dir", default=os.environ["DATA_DIR"], type=str, help="Data directory")
     parser.add_argument("--model", default="cnn", type=str, help="one of [encoder-decoder, cnn]")
     parser.add_argument("--model_dir", default="model", type=str, help="Directory name to load the model from")
     parser.add_argument("--model_version", default="", type=str, help="Saved model version to load (e.g. for a specific checkpoint)")
@@ -71,13 +71,13 @@ if __name__ == "__main__":
     config = ModelConfig(**dict(args._get_kwargs()))
 
     # Load dataset
-    data_dir = os.path.join(args.resources_dir, "datasets", args.dataset)
-    logger.info(f"Loading dataset from {data_dir}\n")
-    dataset = PDEDataset(dataset=config.dataset, dataset_split=args.eval_set, data_dir=config.resources_dir)
+    dataset_dir = os.path.join(args.data_dir, "datasets", args.dataset)
+    logger.info(f"Loading dataset from {dataset_dir}\n")
+    dataset = PDEDataset(dataset=config.dataset, dataset_split=args.eval_set, data_dir=config.data_dir)
     dataloader = DataLoader(dataset, batch_size=config.batch_size, collate_fn=dataset.collate, shuffle=False)
 
     # Load model
-    model_dir = os.path.join(args.resources_dir, "saved_models", args.model_dir, args.model_version)
+    model_dir = os.path.join(args.data_dir, "saved_models", args.model_dir, args.model_version)
 
     logger.info(f"Loading model checkpoint from {model_dir}\n")
     if args.model == "encoder-decoder":

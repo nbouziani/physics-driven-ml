@@ -39,8 +39,8 @@ def train(model, config: ModelConfig,
         model.train()
 
         total_loss = 0.0
-        total_loss_uκ = 0.0
-        total_loss_κ = 0.0
+        total_loss_uk = 0.0
+        total_loss_k = 0.0
         train_steps = len(train_dl)
         for step_num, batch in tqdm(enumerate(train_dl), total=train_steps):
 
@@ -48,22 +48,22 @@ def train(model, config: ModelConfig,
 
             # Move batch to device
             batch = BatchedElement(*[x.to(config.device, non_blocking=True) if isinstance(x, torch.Tensor) else x for x in batch])
-            κ_exact = batch.target
+            k_exact = batch.target
             u_obs = batch.u_obs
 
             # Forward pass
-            κ = model(u_obs)
+            k = model(u_obs)
 
             # Solve PDE for κ_P and assemble the L2-loss: 0.5 * ||u(κ) - u_obs||^{2}_{L2}
-            loss_uκ = G(κ, u_obs)
-            total_loss_uκ += loss_uκ.item()
+            loss_uk = G(k, u_obs)
+            total_loss_uk += loss_uk.item()
 
             # Assemble L2-loss: 0.5 * ||κ - κ_exact||^{2}_{L2}
-            loss_κ = H(κ, κ_exact)
-            total_loss_κ += loss_κ.item()
+            loss_k = H(k, k_exact)
+            total_loss_k += loss_k.item()
 
             # Total loss
-            loss = loss_κ + config.alpha * loss_uκ
+            loss = loss_k + config.alpha * loss_uk
             total_loss += loss.item()
 
             # Backprop and perform Adam optimisation
@@ -72,7 +72,7 @@ def train(model, config: ModelConfig,
             optimiser.step()
 
         logger.info(f"Total loss: {total_loss/train_steps}\
-                    \n\t Loss uκ: {total_loss_uκ/train_steps}  Loss κ: {total_loss_κ/train_steps}")
+                    \n\t Loss u(κ): {total_loss_uk/train_steps}  Loss κ: {total_loss_k/train_steps}")
 
         # Evaluation on the test random field
         error = evaluate(model, config, dev_dl, disable_tqdm=True)
@@ -83,7 +83,7 @@ def train(model, config: ModelConfig,
             best_error = error
             # Create directory for trained models
             name_dir = f"{config.dataset}-epoch-{epoch_num}-error_{best_error:.5f}"
-            model_dir = os.path.join(config.resources_dir, "saved_models", config.model_dir, name_dir)
+            model_dir = os.path.join(config.data_dir, "saved_models", config.model_dir, name_dir)
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
             # Save model
@@ -99,7 +99,7 @@ def train(model, config: ModelConfig,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--resources_dir", default="../data", type=str, help="Resources directory")
+    parser.add_argument("--data_dir", default=os.environ["DATA_DIR"], type=str, help="Data directory")
     parser.add_argument("--model", default="cnn", type=str, help="one of [encoder-decoder, cnn]")
     parser.add_argument("--alpha", default=1e4, type=float, help="Regularisation parameter")
     parser.add_argument("--epochs", default=50, type=int, help="Epochs")
@@ -118,10 +118,10 @@ if __name__ == "__main__":
     # -- Load dataset -- #
 
     # Load train dataset
-    train_dataset = PDEDataset(dataset=config.dataset, dataset_split="train", data_dir=config.resources_dir)
+    train_dataset = PDEDataset(dataset=config.dataset, dataset_split="train", data_dir=config.data_dir)
     train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, collate_fn=train_dataset.collate, shuffle=False)
     # Load test dataset
-    test_dataset = PDEDataset(dataset=config.dataset, dataset_split="test", data_dir=config.resources_dir)
+    test_dataset = PDEDataset(dataset=config.dataset, dataset_split="test", data_dir=config.data_dir)
     test_dataloader = DataLoader(test_dataset, batch_size=config.batch_size, collate_fn=test_dataset.collate, shuffle=False)
 
     # -- Set PDE inputs (mesh, function space, boundary conditions, ...) -- #
@@ -140,11 +140,11 @@ if __name__ == "__main__":
 
     # -- Define the Firedrake operations to be composed with PyTorch -- #
 
-    def solve_pde(κ, u_obs, f, V, bcs):
+    def solve_pde(k, u_obs, f, V, bcs):
         """Solve Poisson problem"""
         u = Function(V)
         v = TestFunction(V)
-        F = (inner(exp(κ) * grad(u), grad(v)) - inner(f, v)) * dx
+        F = (inner(exp(k) * grad(u), grad(v)) - inner(f, v)) * dx
         # Solve PDE (using LU factorisation)
         solve(F == 0, u, bcs=bcs, solver_parameters={'ksp_type': 'preonly', 'pc_type': 'lu'})
         # Assemble Firedrake L2-loss (and not l2-loss as in PyTorch)
@@ -158,20 +158,20 @@ if __name__ == "__main__":
 
     # -- Construct the Firedrake torch operators -- #
 
-    κ = Function(V)
+    k = Function(V)
     u_obs = Function(V)
-    κ_exact = Function(V)
+    k_exact = Function(V)
 
     # Set tape locally to only record the operations relevant to G on the computational graph
     with set_working_tape() as tape:
         # Define PyTorch operator for solving the PDE and compute the L2 error (for computing κ -> 0.5 * ||u(κ) - u_obs||^{2}_{L2})
-        F = ReducedFunctional(solve_pde(κ, u_obs), [Control(κ), Control(u_obs)])
+        F = ReducedFunctional(solve_pde(k, u_obs), [Control(k), Control(u_obs)])
         G = torch_operator(F)
 
     # Set tape locally to only record the operations relevant to H on the computational graph
     with set_working_tape() as tape:
         # Define PyTorch operator for computing the L2-loss (for computing κ -> 0.5 * ||κ - κ_exact||^{2}_{L2})
-        F = ReducedFunctional(assemble_L2_error(κ, κ_exact), [Control(κ), Control(κ_exact)])
+        F = ReducedFunctional(assemble_L2_error(k, k_exact), [Control(k), Control(k_exact)])
         H = torch_operator(F)
 
     # -- Set the model -- #

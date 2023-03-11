@@ -36,9 +36,9 @@ class PDEDataset(Dataset):
             mesh = afile.load_mesh("mesh")
             # Load data
             for i in range(n):
-                κ = afile.load_function(mesh, "k", idx=i)
+                k = afile.load_function(mesh, "k", idx=i)
                 u_obs = afile.load_function(mesh, "u_obs", idx=i)
-                data.append((κ, u_obs))
+                data.append((k, u_obs))
         return mesh, data
 
     def __len__(self) -> int:
