@@ -12,11 +12,11 @@ Developing and running physics-driven machine learning models in a highly produc
 
 ## Setup
 
-This work relies on the Firedrake finite element system, which needs to be installed.
+This work relies on the Firedrake finite element system and on PyTorch, which both need to be installed.
 
 ### Installing Firedrake
 
-Firedrake is installed via its installation script, which you can download and run via:
+[Firedrake](https://www.firedrakeproject.org/) can be installed via its installation script, which you can download and run via:
 
 ```install_firedrake
   curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
@@ -31,9 +31,22 @@ source firedrake/bin/activate
 
 For more details about installing Firedrake: see [here](https://www.firedrakeproject.org/download.html).
 
+### Installing PyTorch
+
+Then, you need to install [PyTorch](https://pytorch.org/) (see [here](https://pytorch.org/get-started/locally/#start-locally)) . Make sure to have your Firedrake virtual environment activated when you install it.
+
+### Installing physics-driven-ml
+
+Finally, you need to install the physics-driven-ml package (within you Firedrake virtual environment) via:
+
+```install_physics_driven_ml
+git clone git@github.com:nbouziani/physics-driven-ml.git
+pip install -e physics-driven-ml
+```
+
 ### Testing installation
 
-We recommend that you run the test suite after installation to check that your setup is fully functional. Activate the venv as above and then run:
+We recommend that you run the test suite after installation to check that your setup is fully functional. Activate the virtual environment as above and then run:
 
 ```install_firedrake_external_operator_branches
 pytest tests
@@ -61,18 +74,18 @@ The dataset used in the paper for the heat conductivity paper dataset can be fou
 
 $$\kappa$$
 <p align="center">
-  <img src="./data/figures/kappa/kappa_1.png" width="230" />
-  <img src="./data/figures/kappa/kappa_2.png" width="230" />
-  <img src="./data/figures/kappa/kappa_3.png" width="230" />
-  <img src="./data/figures/kappa/kappa_4.png" width="230" />
+  <img src="./data/figures/kappa/kappa_1.png" width="210" />
+  <img src="./data/figures/kappa/kappa_2.png" width="210" />
+  <img src="./data/figures/kappa/kappa_3.png" width="210" />
+  <img src="./data/figures/kappa/kappa_4.png" width="210" />
 </p>
 
 $$u^{obs}$$
 <p align="center">
-  <img src="./data/figures/u_obs/u_obs_1.png" width="230" />
-  <img src="./data/figures/u_obs/u_obs_2.png" width="230" />
-  <img src="./data/figures/u_obs/u_obs_3.png" width="230" />
-  <img src="./data/figures/u_obs/u_obs_4.png" width="230" />
+  <img src="./data/figures/u_obs/u_obs_1.png" width="210" />
+  <img src="./data/figures/u_obs/u_obs_2.png" width="210" />
+  <img src="./data/figures/u_obs/u_obs_3.png" width="210" />
+  <img src="./data/figures/u_obs/u_obs_4.png" width="210" />
 </p>
 
 
