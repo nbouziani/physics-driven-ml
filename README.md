@@ -33,14 +33,14 @@ For more details about installing Firedrake: see [here](https://www.firedrakepro
 
 ### Installing PyTorch
 
-Then, you need to install [PyTorch](https://pytorch.org/) (see [here](https://pytorch.org/get-started/locally/#start-locally)) . Make sure to have your Firedrake virtual environment activated when you install it.
+Then, you need to install [PyTorch](https://pytorch.org/) (see [here](https://pytorch.org/get-started/locally/#start-locally)). Make sure to have your Firedrake virtual environment activated when you install it.
 
 ### Installing physics-driven-ml
 
 Finally, you need to install the physics-driven-ml package (within you Firedrake virtual environment) via:
 
 ```install_physics_driven_ml
-git clone git@github.com:nbouziani/physics-driven-ml.git
+git clone https://github.com/nbouziani/physics-driven-ml.git
 pip install -e physics-driven-ml
 ```
 
@@ -49,6 +49,7 @@ pip install -e physics-driven-ml
 We recommend that you run the test suite after installation to check that your setup is fully functional. Activate the virtual environment as above and then run:
 
 ```install_firedrake_external_operator_branches
+cd physics-driven-ml
 pytest tests
 ```
 
