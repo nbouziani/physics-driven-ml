@@ -1,6 +1,8 @@
 # Physics-driven machine learning models
 
-Developing and running physics-driven machine learning models in a highly productive way using PyTorch and Firedrake
+![physics-driven-ml-tests](https://github.com/nbouziani/physics-driven-ml/actions/workflows/tests.yml/badge.svg)
+
+This package provides the base implementation for implementing, evaluating, and training physics-driven machine learning models in a highly productive way using [PyTorch](https://pytorch.org/) and [Firedrake](https://www.firedrakeproject.org/). This repository contains the official implementation of the heat conductivity example in "Physics-driven machine learning models coupling PyTorch and Firedrake", accepted at ICLR 2023 (Physics for Machine Learning workshop). Complex simulations coupling machine learning models implemented in PyTorch and partial differential equations implemented in Firedrake can seamlessly be evaluated and differentiated while only requiring trivial changes to existing code (see paper).
 
 
 ## Table of Contents
@@ -8,6 +10,8 @@ Developing and running physics-driven machine learning models in a highly produc
 * [Generate dataset](#generate-dataset)
 * [Training](#training)
 * [Evaluation](#evaluation)
+* [Reporting bugs](#reporting-bugs)
+* [Contributing](#contributing)
 * [Citation](#citation)
 
 ## Setup
@@ -49,10 +53,9 @@ pip install -e physics-driven-ml
 We recommend that you run the test suite after installation to check that your setup is fully functional. Activate the virtual environment as above and then run:
 
 ```install_firedrake_external_operator_branches
-cd physics-driven-ml
+cd physics_driven_ml
 pytest tests
 ```
-
 
 ## Generate dataset
 
@@ -62,55 +65,64 @@ $$u^{obs}_{i} = \mathcal{F}(\kappa_{i}) + \varepsilon \quad \forall i \in [|1, n
 
 where $\varepsilon$ is noise, and $\mathcal{F}$ is the forward operator that returns the solution of the correponding PDE for a given control $\kappa_{i}$.
 
-For example, the following line will generate 500 training samples and 50 test samples for the heat time-independent forward problem (cf. section 5 paper). This will store this dataset named "heat_conductivity_500" into `./data/datasets`.
+For example, the following line will generate 500 training samples and 50 test samples for the heat time-independent forward problem (cf. section 5 paper). This will store this dataset named "heat_conductivity_500" into `physics-driven-ml/data/datasets`.
 
 ```generate_data
-cd dataset_processing
+cd physics_driven_ml/dataset_processing
 python generate_data.py --forward heat --ntrain 500 --ntest 50 --dataset_name heat_conductivity_500
 ```
 
-You can specify your own forward problem and custom noise by providing the corresponding callables in `./dataset_processing/generate_data.py`.
+You can specify your own forward problem and custom noise by providing the corresponding callables in [physics-driven-ml/dataset_processing/generate_data.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/dataset_processing/generate_data.py).
 
 The dataset used in the paper for the heat conductivity paper dataset can be found in `./data/datasets/heat_conductivity_paper`. Here are some samples from the test set:
 
 $$\kappa$$
 <p align="center">
-  <img src="./data/figures/kappa/kappa_1.png" width="210" />
-  <img src="./data/figures/kappa/kappa_2.png" width="210" />
-  <img src="./data/figures/kappa/kappa_3.png" width="210" />
-  <img src="./data/figures/kappa/kappa_4.png" width="210" />
+  <img src="./data/figures/kappa/kappa_1.png" width="190" />
+  <img src="./data/figures/kappa/kappa_2.png" width="190" />
+  <img src="./data/figures/kappa/kappa_3.png" width="190" />
+  <img src="./data/figures/kappa/kappa_4.png" width="190" />
 </p>
 
 $$u^{obs}$$
 <p align="center">
-  <img src="./data/figures/u_obs/u_obs_1.png" width="210" />
-  <img src="./data/figures/u_obs/u_obs_2.png" width="210" />
-  <img src="./data/figures/u_obs/u_obs_3.png" width="210" />
-  <img src="./data/figures/u_obs/u_obs_4.png" width="210" />
+  <img src="./data/figures/u_obs/u_obs_1.png" width="190" />
+  <img src="./data/figures/u_obs/u_obs_2.png" width="190" />
+  <img src="./data/figures/u_obs/u_obs_3.png" width="190" />
+  <img src="./data/figures/u_obs/u_obs_4.png" width="190" />
 </p>
-
 
 
 ## Training
 
-For training, we provide in `training/train_heat_conductivity.py` the code for training several models on the inverse heat conductivity example (cf. section 5 paper). This training script showcases how one can train PyTorch models with PDE components implemented in Firedrake. This example can easily be adapted to other forward problems by simply changing the PDE problem definition.
+For training, we provide in ([physics-driven-ml/training/train_heat_conductivity.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/training/train_heat_conductivity.py)) the code for training several models on the inverse heat conductivity example (cf. section 5 paper). This training script showcases how one can train PyTorch models with PDE components implemented in Firedrake. This example can easily be adapted to other forward problems by simply changing the PDE problem definition.
 
 Several evaluation metric can be used for evaluation such as L2 or H1. For the paper experiments, we use an average L2-relative error across the test samples. The best performing model(s) with respect to the given evaluation metric is saved across the epochs. For example, the following command trains the model for 150 epochs on the heat conductivity dataset used in the paper using an average L2-relative error.
 
 ```training
-cd training
+cd physics_driven_ml/training
 python train_heat_conductivity.py --dataset heat_conductivity_paper --epochs 150 --model_dir cnn_heat_conductivity --evaluation_metric avg_rel
 ```
 
 ## Evaluation
 
-For evaluation, we can leverage the full armoury of norms suited to PDE-based problems provided by Firedrake such as: L2, H1, Hdiv, or Hcurl. For the experiments, we employed an average relative L2-error norm (cf. section 5 paper). For inference, we need to specify the model directory as well as the model version corresponding to the saved model checkpoint of interest.
+For evaluation, we can leverage the full armoury of norms suited to PDE-based problems provided by Firedrake such as: L2, H1, Hdiv, or Hcurl. For the experiments, we employed an average relative L2-error norm (cf. section 5 paper). For inference, we need to specify the model directory as well as the model version corresponding to the saved model checkpoint of interest. [physics_driven_ml/evaluation/evaluate.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/evaluation/evaluate.py)
+
+
 
 - model experiments.py
 
 ```evaluation
-cd evaluation
+cd physics_driven_ml/evaluation
 python evaluate.py --model_dir cnn_heat_conductivity --model_version [...] --evaluation_metric avg_rel
 ```
+
+## Reporting bugs
+
+## Contributing
+
+- Ensemble
+- Datareader for som PDEBenchmark
+- More examples
 
 ## Citation
