@@ -14,8 +14,6 @@ from physics_driven_ml.utils import ModelConfig, get_logger
 from physics_driven_ml.dataset_processing import PDEDataset, BatchedElement
 
 
-logger = get_logger("Evaluation")
-
 fd_backend = fd.load_backend()
 
 
@@ -55,6 +53,8 @@ def eval_error(x, x_exact, evaluation_metric):
 
 
 if __name__ == "__main__":
+    logger = get_logger("Evaluation")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", default=os.environ["DATA_DIR"], type=str, help="Data directory")
     parser.add_argument("--model", default="cnn", type=str, help="one of [encoder-decoder, cnn]")
@@ -90,5 +90,5 @@ if __name__ == "__main__":
     model.to(config.device)
 
     # Evaluate model
-    error, k_learned = evaluate(model, config, dataloader)
+    error = evaluate(model, config, dataloader)
     logger.info(f"\n\t Error (metric: {config.evaluation_metric}): {error:.4e}")

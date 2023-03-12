@@ -19,9 +19,6 @@ from physics_driven_ml.utils import ModelConfig, get_logger
 from physics_driven_ml.evaluation import evaluate
 
 
-logger = get_logger("Training")
-
-
 def train(model, config: ModelConfig,
           train_dl: DataLoader, dev_dl: DataLoader,
           G: torch_ad.Function, H: torch_ad.Function):
@@ -98,6 +95,8 @@ def train(model, config: ModelConfig,
 
 
 if __name__ == "__main__":
+    logger = get_logger("Training")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", default=os.environ["DATA_DIR"], type=str, help="Data directory")
     parser.add_argument("--model", default="cnn", type=str, help="one of [encoder-decoder, cnn]")

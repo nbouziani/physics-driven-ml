@@ -9,9 +9,6 @@ from firedrake import *
 from physics_driven_ml.utils import get_logger
 
 
-logger = get_logger("Data generation")
-
-
 def random_field(V, N: int = 1, m: int = 5, σ: float = 0.6,
                  tqdm: bool = False, seed: int = 2023):
     """Generate N 2D random fields with m modes."""
@@ -99,6 +96,8 @@ def generate_data(V, dataset_dir: str, ntrain: int = 50, ntest: int = 10,
 
 
 if __name__ == "__main__":
+    logger = get_logger("Data generation")
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--ntrain", default=50, type=int, help="Number of training samples")
     parser.add_argument("--ntest", default=10, type=int, help="Number of testing samples")
