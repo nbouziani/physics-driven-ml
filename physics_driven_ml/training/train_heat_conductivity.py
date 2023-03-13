@@ -71,7 +71,7 @@ def train(model, config: ModelConfig,
         logger.info(f"Total loss: {total_loss/train_steps}\
                     \n\t Loss u(κ): {total_loss_uk/train_steps}  Loss κ: {total_loss_k/train_steps}")
 
-        # Evaluation on the test random field
+        # Evaluation on dev set
         error = evaluate(model, config, dev_dl, disable_tqdm=True)
         logger.info(f"Error ({config.evaluation_metric}): {error}")
 

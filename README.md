@@ -61,13 +61,13 @@ pytest tests
 
 ## Generate dataset
 
-This package provides the base implementation for generating PDE-based inverse problems dataset for arbitrary forward problems $\mathcal{F}$. The current implementation enables to generate pairs $\lbrace\kappa_{i}, u_{i}^{obs}\rbrace_{1 \le i\le n}$ where $\kappa_{i}$ is the parameter of interest (control) and $u_{i}^{obs}$ refers to the observed data, which are obtained by computing the forward problem for a given $\kappa_{i}$ and adding noise to the forward solution. In other words, we have:
+This package provides the base implementation for generating PDE-based inverse problems dataset for an arbitrary forward problem $\mathcal{F}$. The current implementation enables to generate pairs $\lbrace\kappa_{i}, u_{i}^{obs}\rbrace_{1 \le i\le n}$ where $\kappa_{i}$ is the parameter of interest (control) and $u_{i}^{obs}$ refers to the observed data, which are obtained by computing the forward problem for a given $\kappa_{i}$ and adding noise to the forward solution. In other words, we have:
 
 $$u^{obs}_{i} = \mathcal{F}(\kappa_{i}) + \varepsilon \quad \forall i \in [|1, n|]$$
 
 where $\varepsilon$ is noise, and $\mathcal{F}$ is the forward operator that returns the solution of the correponding PDE for a given control $\kappa_{i}$.
 
-For example, the following line will generate 500 training samples and 50 test samples for the heat time-independent forward problem (cf. section 5 paper), and store the resulting dataset named "heat_conductivity_500" into `physics-driven-ml/data/datasets` folder.
+For example, the following line will generate 500 training samples and 50 test samples for the heat time-independent forward problem (cf. section 5 paper), and store the resulting dataset named "heat_conductivity_500" into `data/datasets` folder.
 
 ```generate_data
 cd physics_driven_ml/dataset_processing
@@ -97,7 +97,7 @@ $$u^{obs}$$
 
 ## Training
 
-For training, we provide in ([train_heat_conductivity.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/training/train_heat_conductivity.py)) the code for training several models (CNN, encoder-decoder) on the heat conductivity example (cf. section 5 paper). This training script showcases how one can train PyTorch models with PDE components implemented in Firedrake. This example can easily be adapted to other forward problems by simply changing the PDE problem definition.
+For training, we provide in [train_heat_conductivity.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/training/train_heat_conductivity.py) the code for training several models (e.g. CNN or encoder-decoder) on the heat conductivity example (cf. section 5 paper). This training script showcases how one can train PyTorch models with PDE components implemented in Firedrake. This example can easily be adapted to other forward problems by simply changing the PDE problem definition.
 
 Several evaluation metrics can be used for evaluation such as L2 or H1. For the paper experiments, we used a L2-relative error averaged across the test samples. The best performing model(s) with respect to the given evaluation metric will be saved in `data/saved_models` throughout the epochs. For example, the following command trains the model for 150 epochs on the heat conductivity dataset used in the paper using an averaged L2-relative error.
 
@@ -108,13 +108,13 @@ python train_heat_conductivity.py --dataset heat_conductivity_paper --epochs 150
 
 ## Evaluation
 
-For evaluation, we provide in [evaluate.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/evaluation/evaluate.py) the implementation for evaluating PyTorch machine learning models on arbitrarily defined PDE-based dataset while leveraging the full armoury of norms suited to PDE-based problems provided by Firedrake such as: L2, H1, Hdiv, or Hcurl. For inference, we need to specify the model directory as well as the model version corresponding to the saved model checkpoint of interest.
+For evaluation, we provide in [evaluate.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/evaluation/evaluate.py) the implementation for evaluating PyTorch machine learning models on arbitrarily defined PDE-based datasets while leveraging the full armoury of norms suited to PDE-based problems provided by Firedrake such as: L2, H1, Hdiv, or Hcurl. For inference, we need to specify the model directory as well as the model version corresponding to the saved model checkpoint of interest.
 
 For example, the following command evaluates the model saved in `data/saved_models/cnn_heat_conductivity` corresponding to the checkpoint saved at the 76th epoch (named `heat_conductivity_paper-epoch-76-error_0.14`) using the L2 norm:
 
 ```evaluation
 cd physics_driven_ml/evaluation
-python evaluate.py --model_dir cnn_heat_conductivity --model_version heat_conductivity_paper-epoch-76-error_0.14 --evaluation_metric L2
+python evaluate.py --dataset heat_conductivity_paper --model_dir cnn_heat_conductivity --model_version heat_conductivity_paper-epoch-76-error_0.14 --evaluation_metric L2
 ```
 
 Model checkpoints are saved during training and follow the structure `<dataset_name>-epoch-<epoch_num>-error_<best_error>`. For sake of simplicity, one might want to consider adding an experiment tracker file to label the model checkpoints of interest.
