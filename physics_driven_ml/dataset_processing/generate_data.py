@@ -1,6 +1,7 @@
 import os
 import argparse
 import numpy as np
+from typing import Union, Callable
 from tqdm.auto import tqdm, trange
 from numpy.random import default_rng
 
@@ -27,9 +28,30 @@ def random_field(V, N: int = 1, m: int = 5, σ: float = 0.6,
 
 
 def generate_data(V, dataset_dir: str, ntrain: int = 50, ntest: int = 10,
-                  forward: str = "heat", noise: str = "normal",
+                  forward: Union[str, Callable] = "heat", noise: Union[str, Callable] = "normal",
                   scale_noise: float = 1., seed: int = 1234):
-    """Generate train/test data for a given PDE and noise distribution."""
+    """Generate train/test data for a given PDE-based forward problem and noise distribution.
+
+    Parameters:
+        - V: Firedrake function space
+        - dataset_dir: directory to save the generated data
+        - ntrain: number of training samples
+        - ntest: number of test samples
+        - forward: forward model (e.g "heat")
+        - noise: noise distribution to form the observed data (e.g. "normal")
+        - scale_noise: noise scaling factor
+        - seed: random seed
+
+    Custom forward problems:
+        One can provide a custom forward problem by specifying a callable for the `forward` argument.
+        This callable should take in a list of randomly generated inputs and the function space `V`, and
+        it should return a list of Firedrake functions corresponding to the PDE solutions.
+
+    Custom noise perturbations:
+        Likewise, one can provide a custom noise perturbation by specifying a callable for the `noise` argument.
+        This callable should take in a list of PDE solutions, and it should return a list of Firedrake functions
+        corresponding to the observed data, i.e. the perturbed PDE solutions.
+    """
 
     logger.info("\n Generate random fields")
 
@@ -100,7 +122,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--ntrain", default=50, type=int, help="Number of training samples")
-    parser.add_argument("--ntest", default=10, type=int, help="Number of testing samples")
+    parser.add_argument("--ntest", default=10, type=int, help="Number of test samples")
     parser.add_argument("--forward", default="heat", type=str, help="Forward problem (e.g. 'heat')")
     parser.add_argument("--noise", default="normal", type=str, help="Noise distribution (e.g. 'normal')")
     parser.add_argument("--scale_noise", default=5e-3, type=float, help="Noise scaling")
