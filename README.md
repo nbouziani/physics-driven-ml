@@ -1,5 +1,6 @@
 # Physics-driven machine learning models
 
+[![DOI](https://sandbox.zenodo.org/badge/596195530.svg)](https://sandbox.zenodo.org/badge/latestdoi/596195530)
 ![physics-driven-ml-tests](https://github.com/nbouziani/physics-driven-ml/actions/workflows/tests.yml/badge.svg)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 
