@@ -4,7 +4,7 @@
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
 
 
-This package provides the base implementation for implementing, evaluating, and training physics-driven machine learning models in a highly productive way using [PyTorch](https://pytorch.org/) and [Firedrake](https://www.firedrakeproject.org/). This repository contains the official implementation of the heat conductivity example in "Physics-driven machine learning models coupling PyTorch and Firedrake", accepted at ICLR 2023 (Physics for Machine Learning workshop). Complex simulations coupling machine learning models implemented in PyTorch and partial differential equations implemented in Firedrake can seamlessly be evaluated and differentiated while only requiring trivial changes to existing code (see paper).
+This package provides the base implementation for implementing, evaluating, and training physics-driven machine learning models in a highly productive way using [PyTorch](https://pytorch.org/) and [Firedrake](https://www.firedrakeproject.org/). This repository contains the official implementation of the heat conductivity example in "[Physics-driven machine learning models coupling PyTorch and Firedrake](https://arxiv.org/abs/2303.06871)", accepted at _ICLR 2023 (Physics for Machine Learning workshop)_. Complex simulations coupling machine learning models implemented in PyTorch and partial differential equations implemented in Firedrake can seamlessly be evaluated and differentiated while only requiring trivial changes to existing code (cf. [paper](https://arxiv.org/abs/2303.06871)).
 
 
 ## Table of Contents
@@ -67,7 +67,7 @@ $$u^{obs}_{i} = \mathcal{F}(\kappa_{i}) + \varepsilon \quad \forall i \in [|1, n
 
 where $\varepsilon$ is noise, and $\mathcal{F}$ is the forward operator that returns the solution of the correponding PDE for a given control $\kappa_{i}$.
 
-For example, the following line will generate 500 training samples and 50 test samples for the heat time-independent forward problem (cf. section 5 paper), and store the resulting dataset named "heat_conductivity_500" into `data/datasets` folder.
+For example, the following line will generate 500 training samples and 50 test samples for the heat time-independent forward problem, and store the resulting dataset named "heat_conductivity_500" into `data/datasets` folder.
 
 ```generate_data
 cd physics_driven_ml/dataset_processing
@@ -97,7 +97,7 @@ $$u^{obs}$$
 
 ## Training
 
-For training, we provide in [train_heat_conductivity.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/training/train_heat_conductivity.py) the code for training several models (e.g. CNN or encoder-decoder) on the heat conductivity example (cf. section 5 paper). This training script showcases how one can train PyTorch models with PDE components implemented in Firedrake. This example can easily be adapted to other forward problems by simply changing the PDE problem definition.
+For training, we provide in [train_heat_conductivity.py](https://github.com/nbouziani/physics-driven-ml/blob/main/physics_driven_ml/training/train_heat_conductivity.py) the code for training several models (e.g. CNN or encoder-decoder) on the heat conductivity example. This training script showcases how one can train PyTorch models with PDE components implemented in Firedrake. This example can easily be adapted to other forward problems by simply changing the PDE problem definition.
 
 Several evaluation metrics can be used for evaluation such as L2 or H1. For the paper experiments, we used a L2-relative error averaged across the test samples. The best performing model(s) with respect to the given evaluation metric will be saved in `data/saved_models` throughout the epochs. For example, the following command trains the model for 150 epochs on the heat conductivity dataset used in the paper using an averaged L2-relative error.
 
@@ -143,3 +143,14 @@ In addition, make sure your changes comply with `flake8` formatting.
 
 
 ## Citation
+
+If you found this work to be useful, then please cite: ([arXiv paper](https://arxiv.org/abs/2303.06871))
+
+```bibtex
+@inproceedings{bouziani_physics-driven_2023,
+	title = {Physics-driven machine learning models coupling {PyTorch} and {Firedrake}},
+	author = {Bouziani, Nacime and Ham, David A.},
+	booktitle = {{ICLR} 2023 {Workshop} on {Physics} for {Machine} {Learning}},
+	year = {2023}
+}
+```
