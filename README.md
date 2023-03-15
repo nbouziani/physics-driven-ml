@@ -152,6 +152,7 @@ If you found this work to be useful, then please cite: ([arXiv paper](https://ar
 	title = {Physics-driven machine learning models coupling {PyTorch} and {Firedrake}},
 	author = {Bouziani, Nacime and Ham, David A.},
 	booktitle = {{ICLR} 2023 {Workshop} on {Physics} for {Machine} {Learning}},
-	year = {2023}
+	year = {2023},
+	doi = {10.48550/arXiv.2303.06871}
 }
 ```
