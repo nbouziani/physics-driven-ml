@@ -53,10 +53,9 @@ pip install -e physics-driven-ml
 
 ### Testing installation
 
-We recommend that you run the test suite after installation to check that your setup is fully functional. Activate the virtual environment as above and then run:
+We recommend that you run the test suite after installation to check that your setup is fully functional. Activate the virtual environment as above and then run the following command from the project directory:
 
 ```install_firedrake_external_operator_branches
-cd physics_driven_ml
 pytest tests
 ```
 
