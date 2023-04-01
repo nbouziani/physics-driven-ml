@@ -3,6 +3,7 @@ import argparse
 
 import torch
 import firedrake as fd
+import firedrake.ml as fd_ml
 
 from torch.utils.data import DataLoader
 
@@ -14,7 +15,7 @@ from physics_driven_ml.utils import ModelConfig, get_logger
 from physics_driven_ml.dataset_processing import PDEDataset, BatchedElement
 
 
-fd_backend = fd.load_backend()
+fd_backend = fd_ml.load_backend()
 
 
 def evaluate(model, config, dataloader, disable_tqdm=False):
