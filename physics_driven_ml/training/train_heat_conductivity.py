@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 
 from firedrake import *
 from firedrake_adjoint import *
+from firedrake.ml import torch_operator
 
 from physics_driven_ml.dataset_processing import PDEDataset, BatchedElement
 from physics_driven_ml.models import EncoderDecoder, CNN

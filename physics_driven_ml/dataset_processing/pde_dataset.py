@@ -3,7 +3,8 @@ import numpy as np
 import torch
 
 from typing import List
-from firedrake import CheckpointFile, load_backend
+from firedrake import CheckpointFile
+from firedrake.ml import load_backend
 from torch.utils.data import Dataset
 
 from physics_driven_ml.dataset_processing import BatchElement, BatchedElement

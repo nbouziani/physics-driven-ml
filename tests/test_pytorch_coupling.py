@@ -4,6 +4,7 @@ import torch
 
 from firedrake import *
 from firedrake_adjoint import *
+from firedrake.ml import torch_operator, load_backend
 from pyadjoint.tape import get_working_tape, pause_annotation
 
 from physics_driven_ml.models import EncoderDecoder
