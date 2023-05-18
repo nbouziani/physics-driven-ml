@@ -27,7 +27,7 @@ This work relies on the Firedrake finite element system and on PyTorch, which bo
 
 ```install_firedrake
   curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
-  python3 firedrake-install --package-branch firedrake pytorch_coupling
+  python3 firedrake-install
 ```
 
 Finally, you will need to activate the Firedrake virtual environment:
