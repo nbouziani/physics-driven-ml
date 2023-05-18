@@ -4,7 +4,7 @@ import torch
 
 from typing import List
 from firedrake import CheckpointFile
-from firedrake.ml import load_backend
+from firedrake.ml.pytorch import *
 from torch.utils.data import Dataset
 
 from physics_driven_ml.dataset_processing import BatchElement, BatchedElement
@@ -24,9 +24,6 @@ class PDEDataset(Dataset):
         mesh, batch_elements = self.load_dataset(os.path.join(dataset_dir, name_file))
         self.mesh = mesh
         self.batch_elements_fd = batch_elements
-
-        # Get PyTorch backend from Firedrake (for mapping from Firedrake to PyTorch and vice versa)
-        self._fd_backend = load_backend()
 
     def load_dataset(self, fname: str):
         data = []
@@ -48,7 +45,7 @@ class PDEDataset(Dataset):
     def __getitem__(self, idx: int) -> BatchElement:
         target_fd, u_obs_fd = self.batch_elements_fd[idx]
         # Convert Firedrake functions to PyTorch tensors
-        target, u_obs = [self._fd_backend.to_ml_backend(e) for e in [target_fd, u_obs_fd]]
+        target, u_obs = [to_torch(e) for e in [target_fd, u_obs_fd]]
         return BatchElement(target=target, u_obs=u_obs,
                             target_fd=target_fd, u_obs_fd=u_obs_fd)
 

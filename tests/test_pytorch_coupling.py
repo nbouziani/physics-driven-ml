@@ -4,14 +4,11 @@ import torch
 
 from firedrake import *
 from firedrake_adjoint import *
-from firedrake.ml import torch_operator, load_backend
+from firedrake.ml.pytorch import *
 from pyadjoint.tape import get_working_tape, pause_annotation
 
 from physics_driven_ml.models import EncoderDecoder
 from physics_driven_ml.utils import ModelConfig
-
-
-pytorch_backend = load_backend("pytorch")
 
 
 @pytest.fixture(autouse=True)
@@ -95,7 +92,7 @@ def test_pytorch_loss_backward(V, f_exact):
     assert all([θi.grad is None for θi in model.parameters()])
 
     # Convert f_exact to torch.Tensor
-    f_P = pytorch_backend.to_ml_backend(f_exact)
+    f_P = to_torch(f_exact)
 
     # Forward pass
     u_P = model(f_P)
@@ -125,9 +122,9 @@ def test_pytorch_loss_backward(V, f_exact):
     assert all([θi.grad is not None for θi in model.parameters()])
 
     # -- Check forward operator -- #
-    u = pytorch_backend.from_ml_backend(u_P, V)
+    u = from_torch(u_P, V)
     residual = poisson_residual(u, f_exact, V)
-    residual_P_exact = pytorch_backend.to_ml_backend(residual)
+    residual_P_exact = to_torch(residual)
 
     assert (residual_P - residual_P_exact).detach().norm() < 1e-10
 
@@ -150,7 +147,7 @@ def test_firedrake_loss_backward(V):
     λ = Function(V)
 
     # Convert f to torch.Tensor
-    λ_P = pytorch_backend.to_ml_backend(λ)
+    λ_P = to_torch(λ)
 
     # Forward pass
     f_P = model(λ_P)
@@ -178,9 +175,9 @@ def test_firedrake_loss_backward(V):
     assert all([θi.grad is not None for θi in model.parameters()])
 
     # -- Check forward operator -- #
-    f = pytorch_backend.from_ml_backend(f_P, V)
+    f = from_torch(f_P, V)
     loss = solve_poisson(f, V)
-    loss_P_exact = pytorch_backend.to_ml_backend(loss)
+    loss_P_exact = to_torch(loss)
 
     assert (loss_P - loss_P_exact).detach().norm() < 1e-10
 
