@@ -63,7 +63,9 @@ pytest tests
 
 This package provides the base implementation for generating PDE-based inverse problems dataset for an arbitrary forward problem $\mathcal{F}$. The current implementation enables to generate pairs $\lbrace\kappa_{i}, u_{i}^{obs}\rbrace_{1 \le i\le n}$ where $\kappa_{i}$ is the parameter of interest (control) and $u_{i}^{obs}$ refers to the observed data, which are obtained by computing the forward problem for a given $\kappa_{i}$ and adding noise to the forward solution. In other words, we have:
 
+```math
 $$u^{obs}_{i} = \mathcal{F}(\kappa_{i}) + \varepsilon \quad \forall i \in [|1, n|]$$
+```
 
 where $\varepsilon$ is noise, and $\mathcal{F}$ is the forward operator that returns the solution of the correponding PDE for a given control $\kappa_{i}$.
 
