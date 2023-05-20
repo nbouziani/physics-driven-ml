@@ -3,7 +3,7 @@ import argparse
 
 import torch
 import firedrake as fd
-import firedrake.ml as fd_ml
+import firedrake.ml.pytorch as fd_ml
 
 from torch.utils.data import DataLoader
 
@@ -13,9 +13,6 @@ from tqdm.auto import tqdm
 from physics_driven_ml.models import EncoderDecoder, CNN
 from physics_driven_ml.utils import ModelConfig, get_logger
 from physics_driven_ml.dataset_processing import PDEDataset, BatchedElement
-
-
-fd_backend = fd_ml.load_backend()
 
 
 def evaluate(model, config, dataloader, disable_tqdm=False):
@@ -35,7 +32,7 @@ def evaluate(model, config, dataloader, disable_tqdm=False):
 
         with torch.no_grad():
             kP = model(u_obs)
-            kF = fd_backend.from_ml_backend(kP, k_exact.function_space())
+            kF = fd_ml.from_torch(kP, k_exact.function_space())
             total_error += compute_error(kF, k_exact)
 
         if step_num == eval_steps - 1:

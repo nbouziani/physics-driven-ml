@@ -20,13 +20,6 @@ jobs:
       options: --user root
     steps:
     - uses: actions/checkout@v2
-    - name: Check out branches
-      shell: bash -l {0}
-      run: |
-        git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
-        cd /home/firedrake/firedrake/src/firedrake
-        git checkout pytorch_coupling
-        git pull
     - name: Install torch
       shell: bash -l {0}
       run: |
