@@ -21,8 +21,47 @@ def three_point_bending(E, nu, w_max):
     right_bc = DirichletBC(V, 0.0, 2)
     bc = [left_bc, right_bc]
     I = b * h ** 3 / 12
+    f = Constant(-1.0)
+    F = E*I*u.dx(0).dx(0)*v*dx - f*v*dx
+
+    # Solve the problem
+    w = Function(V)
+    solve(lhs(F) == rhs(F), w, bcs=bc)
+
     return 48 * w_max * E * I / length ** 3
 
+
+def enhanced_three_point_bending_model(model, E, nu, deflection_max):
+    # Calculate relevant parameters
+    L = 1.0  # Length of the beam
+    b = 1.0  # Width of the beam
+    h = 0.1  # Height of the beam
+
+    I = (b * h ** 3) / 12  # Moment of inertia
+    A = b * h  # Cross-sectional area
+
+    # Calculate the maximum moment and maximum stress
+    M_max = (3 * E * I * deflection_max) / (L ** 2)
+
+    # Calculate the force at various deflection values
+    num_points = 100  # Number of points along the deflection range
+    deflection_range = np.linspace(0, deflection_max, num_points)
+
+    force_values = []
+    stress_values = []
+    for deflection in deflection_range:
+        strain_tensor = np.array([[deflection / L, 0], [0, 0]])
+        print(strain_tensor)
+        output_tensor = model.predict(strain_tensor.reshape(1, 4))
+        output_tensor = output_tensor.reshape(-1)
+
+        force = output_tensor[0]
+        stress = output_tensor[2]
+        #
+        force_values.append(force)
+        stress_values.append(stress)
+
+    return deflection_range, force_values, stress_values
 
 def get_dataset(num_samples, E, nu):
     mesh = UnitSquareMesh(10, 10)
