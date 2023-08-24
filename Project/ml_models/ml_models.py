@@ -10,7 +10,7 @@ class NN(nn.Module):
     def __init__(self):
         super(NN, self).__init__()
         # Define your model architecture
-        self.fc1 = nn.Linear(3, 8)
+        self.fc1 = nn.Linear(5, 8)
         self.fc2 = nn.Linear(8, 16)
         self.fc3 = nn.Linear(16, 32)
         self.fc4 = nn.Linear(32, 3)
