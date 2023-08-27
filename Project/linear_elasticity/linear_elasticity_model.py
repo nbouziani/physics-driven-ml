@@ -1,11 +1,15 @@
 from firedrake import *
 import numpy as np
+from tqdm.auto import tqdm, trange
 
 
-def linear_elastic_forward_model(E, nu, strain):
+def linear_elastic_forward_model(E, nu, strain, disconnected=False):
     mesh = RectangleMesh(20, 20, 1, 1)
     x, y = SpatialCoordinate(mesh)
-    V = VectorFunctionSpace(mesh, 'CG', 1)
+    if disconnected:
+        V = VectorFunctionSpace(mesh, "DG", 1)
+    else:
+        V = VectorFunctionSpace(mesh, 'CG', 1)
     v, u_ = TestFunction(V), TrialFunction(V)
     u = Function(V, name="Displacement")
     mu = E / (2 * (1 + nu))
@@ -64,10 +68,28 @@ def check_forward(E, nu, strain_tensor):
     return s
 
 
+def get_dataset(size, E, nu):
+    X, y = [], []
+    for _ in tqdm(range(size)):
+        a11, a12, a22 = [np.random.uniform(-0.2, 0.2) for _ in range(3)]
+        strain = np.array([[a11, a12], [a12, a22]])
+        stress = linear_elastic_forward_model(E, nu, strain)
+        X.append(np.hstack([a11, a22, a12]))
+        y.append([stress[0, 0], stress[1, 1], stress[0, 1]])
+
+    np.save("../../data/datasets/linear_elasticity/X.npy", X)
+    np.save("../../data/datasets/linear_elasticity/y.npy", y)
+
+
 if __name__ == '__main__':
-    E = 10
-    nu = 0.1
-    strain_tensor = np.array([[0.1, 0],
-                              [0, 0]])
-    print(linear_elastic_forward_model(E, nu, strain_tensor))
-    print(check_forward(E, nu, strain_tensor))
+    # E = 10
+    # nu = 0.1
+    # strain_tensor = np.array([[0.1, 0],
+    #                           [0, 0]])
+    # print(linear_elastic_forward_model(E, nu, strain_tensor))
+    # print(check_forward(E, nu, strain_tensor))
+    # print(linear_elastic_forward_model(E, nu, strain_tensor, True))
+
+    E = Constant(210e9)  # Young's modulus in Pa
+    nu = Constant(0.3)  # Poisson's ratio
+    get_dataset(100, E, nu)
