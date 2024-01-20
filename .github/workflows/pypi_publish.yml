@@ -6,9 +6,11 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Upload Python Package (Test Pypi)
+name: Upload Python Package
 
-on: push
+on:
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -17,10 +19,6 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/physics-driven-ml
 
     steps:
     - uses: actions/checkout@v3
@@ -39,4 +37,3 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
-  
