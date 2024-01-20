@@ -2,7 +2,6 @@
 import os
 import sys
 
-#import petsc4py
 import numpy as np
 
 from pathlib import Path
@@ -35,7 +34,7 @@ def get_petsc_dir():
 petsc_dirs = get_petsc_dir()
 if os.environ.get("HDF5_DIR"):
     petsc_dirs = petsc_dirs + (os.environ.get("HDF5_DIR"), )
-include_dirs = [np.get_include()) #, petsc4py.get_include()]
+include_dirs = [np.get_include()]  # , petsc4py.get_include()]
 include_dirs += ["%s/include" % d for d in petsc_dirs]
 dirs = (sys.prefix, *petsc_dirs)
 link_args = ["-L%s/lib" % d for d in dirs] + ["-Wl,-rpath,%s/lib" % d for d in dirs]
