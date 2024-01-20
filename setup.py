@@ -1,7 +1,6 @@
 
 import os
 import sys
-import versioneer
 
 import petsc4py
 import numpy as np
@@ -15,9 +14,6 @@ from Cython.Distutils import build_ext
 dir = Path(__file__).parent
 long_description = (dir / "README.md").read_text()
 
-
-cmdclass = versioneer.get_cmdclass()
-cmdclass['build_ext'] = build_ext
 # List of Cython extensions
 cythonfiles = [("adjacency_dofs", ["petsc"])]
 
@@ -61,6 +57,6 @@ setup(
     author_email="n.bouziani18@imperial.ac.uk",
     packages=find_packages(),
     install_requires=["tqdm", "versioneer"],
-    cmdclass=cmdclass,
+    cmdclass=dict(build_ext=build_ext),
     ext_modules=extensions,
 )
