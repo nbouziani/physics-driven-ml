@@ -56,7 +56,7 @@ setup(
     author="Nacime Bouziani",
     author_email="n.bouziani18@imperial.ac.uk",
     packages=find_packages(),
-    install_requires=["tqdm", "versioneer"],
+    install_requires=["tqdm", "petsc4py"],
     cmdclass=dict(build_ext=build_ext),
     ext_modules=extensions,
 )
