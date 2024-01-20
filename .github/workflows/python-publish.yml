@@ -44,7 +44,7 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/<package-name>
+      url: https://test.pypi.org/p/physics-driven-ml
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
