@@ -60,7 +60,7 @@ setup(
     author="Nacime Bouziani",
     author_email="n.bouziani18@imperial.ac.uk",
     packages=find_packages(),
-    install_requires=["tqdm"],
+    install_requires=["tqdm", "versioneer"],
     cmdclass=cmdclass,
     ext_modules=extensions,
 )
