@@ -27,8 +27,9 @@ jobs:
         python3 -m
         pip install
         build
-        pip install -U Cython==0.29.36
-        pip install numpy petsc petsc4py
+        pip install numpy==1.24
+        pip install Cython==3.0.8
+        pip install petsc petsc4py
         --user
     - name: Build a binary wheel and a source tarball
       run: python3 -m build
