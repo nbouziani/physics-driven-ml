@@ -21,6 +21,7 @@ cmdclass['build_ext'] = build_ext
 # List of Cython extensions
 cythonfiles = [("adjacency_dofs", ["petsc"])]
 
+
 def get_petsc_dir():
     try:
         petsc_dir = os.environ["PETSC_DIR"]
@@ -33,6 +34,7 @@ def get_petsc_dir():
             sys.exit("""Error: Firedrake venv not active.""")
 
     return (petsc_dir, os.path.join(petsc_dir, petsc_arch))
+
 
 petsc_dirs = get_petsc_dir()
 if os.environ.get("HDF5_DIR"):
