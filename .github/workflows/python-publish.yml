@@ -35,7 +35,7 @@ jobs:
       shell: bash -l {0}
       run: |
         source /home/firedrake/firedrake/bin/activate
-        python3 -m build
+        python -m build
     - name: Store the distribution packages
       uses: actions/upload-artifact@v3
       with:
