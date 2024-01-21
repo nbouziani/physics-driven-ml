@@ -47,7 +47,7 @@ long_description = (dir / "README.md").read_text()
 
 setup(
     name="physics-driven-ml",
-    version="0.1.0",
+    version="0.1.1",
     description="Physics-driven machine learning using the Firedrake and PyTorch libraries",
     long_description=long_description,
     long_description_content_type='text/markdown',
