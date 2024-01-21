@@ -110,3 +110,23 @@ class StokesDataset(PDEDataset):
         return GraphBatchElement(u=target_u, f=target_f,
                                  u_fd=target_u_fd, f_fd=target_f_fd)
 
+    def collate(self, batch_elements: List[GraphBatchElement]) -> GraphBatchedElement:
+        # Workaround to enable custom data types (e.g. firedrake.Function) in PyTorch dataloaders
+        # See: https://pytorch.org/docs/stable/data.html#working-with-collate-fn
+        batch_size = len(batch_elements)
+        n = max(e.u.size(-1) for e in batch_elements)
+        m = max(e.f.size(-1) for e in batch_elements)
+
+        u = torch.zeros(batch_size, n, dtype=batch_elements[0].u.dtype)
+        f = torch.zeros(batch_size, m, dtype=batch_elements[0].f.dtype)
+        f_fd = []
+        u_fd = []
+        for i, e in enumerate(batch_elements):
+            u[i, :] = e.u
+            f[i, :] = e.f
+            u_fd.append(e.u_fd)
+            f_fd.append(e.f_fd)
+
+        return GraphBatchedElement(u=u, f=f,
+                                   u_fd=u_fd, f_fd=f_fd,
+                                   batch_elements=batch_elements)

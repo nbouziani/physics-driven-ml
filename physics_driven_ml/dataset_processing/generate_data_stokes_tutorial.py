@@ -1,6 +1,5 @@
 import os
 import argparse
-import numpy as np
 from typing import Union, Callable
 from tqdm.auto import tqdm, trange
 from numpy.random import default_rng
@@ -67,7 +66,7 @@ def solve_stokes_cylinder(fs):
         #                          "mat_type": "aij",
         #                          "pc_type": "lu",
         #                          "ksp_atol": 1.0e-9,
-        #                          "pc_factor_mat_solver_type": "mumps"})        
+        #                          "pc_factor_mat_solver_type": "mumps"})
     return us, edge_index
 
 
