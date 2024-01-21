@@ -95,7 +95,7 @@ class StokesDataset(PDEDataset):
             # Load adjacency list
             edge_index = np.array(afile.h5pyfile["edge_index"])
             # Load mesh
-            mesh = afile.load_mesh("mesh")
+            mesh = afile.load_mesh()
             # Load data
             for i in range(n):
                 f = afile.load_function(mesh, "f", idx=i)
