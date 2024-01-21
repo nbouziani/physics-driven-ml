@@ -32,7 +32,6 @@ jobs:
     - name: Install pypa/build
       shell: bash -l {0}
       run: >-
-        source /home/firedrake/firedrake/bin/activate
         python3 -m
         pip install
         build
