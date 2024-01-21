@@ -39,6 +39,7 @@ jobs:
     - name: Build a binary wheel and a source tarball
       shell: bash -l {0}
       run: |
+        python3 -m pip install numpy cython petsc petsc4py
         python3 -m build
     - name: Store the distribution packages
       uses: actions/upload-artifact@v3
