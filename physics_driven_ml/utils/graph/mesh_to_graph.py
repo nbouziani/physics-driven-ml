@@ -1,4 +1,4 @@
-from adjacency_dofs import build_dof_adjacency
+from physics_driven_ml.utils.graph.adjacency_dofs import build_dof_adjacency
 
 
 def build_adjacency(mesh, V):
