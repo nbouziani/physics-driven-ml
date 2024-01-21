@@ -15,6 +15,10 @@ jobs:
   build:
     name: Build distribution 📦
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
     container:
       image: firedrakeproject/firedrake-vanilla:latest
       options: --user root
@@ -25,7 +29,7 @@ jobs:
       uses: actions/setup-python@v4
       with:
         matrix:
-          python-version: ["3.8", "3.9", "3.10", "3.11"]
+          python-version:  ${{ matrix.python-version }}
     - name: Install pypa/build
       run: >-
         python3 -m
