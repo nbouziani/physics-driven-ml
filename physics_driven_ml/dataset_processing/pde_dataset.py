@@ -74,17 +74,17 @@ class PDEDataset(Dataset):
 class StokesDataset(PDEDataset):
     """Dataset reader for Stokes problems generated using Firedrake."""
 
-    def __init__(self, dataset: str = "stokes_cylinder", dataset_split: str = "train", data_dir: str = ""):
+    def __init__(self, dataset: str = "stokes_cylinder", dataset_split: str = "", data_dir: str = ""):
         # Check dataset directory
         dataset_dir = os.path.join(data_dir, dataset)
         if not os.path.exists(dataset_dir):
             raise ValueError(f"Dataset directory {os.path.abspath(dataset_dir)} does not exist")
 
         # Get mesh and batch elements (Firedrake functions)
-        name_file = dataset_split + "_data.h5"
+        name_file = dataset_split + "_data.h5" if dataset_split != "" else "data.h5"
         mesh, edge_index, batch_elements = self.load_dataset(os.path.join(dataset_dir, name_file))
         self.mesh = mesh
-        self.edge_index = edge_index
+        self.edge_index = torch.tensor(edge_index, dtype=torch.int64).T
         self.batch_elements_fd = batch_elements
 
     def load_dataset(self, fname: str):
@@ -108,7 +108,8 @@ class StokesDataset(PDEDataset):
         # Convert Firedrake functions to PyTorch tensors
         target_f, target_u = [to_torch(e) for e in [target_f_fd, target_u_fd]]
         return GraphBatchElement(u=target_u, f=target_f,
-                                 u_fd=target_u_fd, f_fd=target_f_fd)
+                                 u_fd=target_u_fd, f_fd=target_f_fd,
+                                 edge_index=self.edge_index)
 
     def collate(self, batch_elements: List[GraphBatchElement]) -> GraphBatchedElement:
         # Workaround to enable custom data types (e.g. firedrake.Function) in PyTorch dataloaders
@@ -129,4 +130,5 @@ class StokesDataset(PDEDataset):
 
         return GraphBatchedElement(u=u, f=f,
                                    u_fd=u_fd, f_fd=f_fd,
-                                   batch_elements=batch_elements)
+                                   batch_elements=batch_elements,
+                                   edge_index=self.edge_index)

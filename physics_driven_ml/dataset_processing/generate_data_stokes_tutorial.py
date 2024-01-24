@@ -168,10 +168,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set up mesh and finite element space
-    mesh_path = os.path.join("/home/nacime/tests/physics-driven-ml/data/datasets/meshes", "symmetric_mesh.msh")
-    inlet = 10
-    circle = 13
-    bottom_top = (12,)
+    #mesh_path = os.path.join("/home/nacime/tests/physics-driven-ml/data/datasets/meshes", "symmetric_mesh.msh")
+    # inlet = 10
+    # circle = 13
+    # bottom_top = (12,)
+    mesh_path = os.path.join("/home/nacime/tests/physics-driven-ml/data/datasets/meshes", "stokes-control.msh")
+    inlet = 1
+    circle = 4
+    bottom_top = (3, 5)
     mesh = Mesh(mesh_path)
     V = VectorFunctionSpace(mesh, "CG", 2)
     # Set up data directory
