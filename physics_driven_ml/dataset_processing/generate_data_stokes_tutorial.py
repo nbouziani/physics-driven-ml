@@ -168,7 +168,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set up mesh and finite element space
-    #mesh_path = os.path.join("/home/nacime/tests/physics-driven-ml/data/datasets/meshes", "symmetric_mesh.msh")
+    # mesh_path = os.path.join("/home/nacime/tests/physics-driven-ml/data/datasets/meshes", "symmetric_mesh.msh")
     # inlet = 10
     # circle = 13
     # bottom_top = (12,)
