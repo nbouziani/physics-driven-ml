@@ -7,7 +7,7 @@ from physics_driven_ml.evaluation import *                    # noqa: F401
 from physics_driven_ml.utils import ModelConfig, get_logger   # noqa: F401
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "Nacime Bouziani"
 
 
